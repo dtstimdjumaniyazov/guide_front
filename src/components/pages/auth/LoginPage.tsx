@@ -18,7 +18,6 @@ const LoginPage: React.FC = () => {
   })
   const [error, setError] = useState('')
 
-  // Редирект если уже авторизован
   useEffect(() => {
     if (isAuthenticated) {
       const from = location.state?.from?.pathname || '/'
@@ -28,11 +27,7 @@ const LoginPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    // Очищаем ошибку при изменении полей
+    setFormData(prev => ({ ...prev, [name]: value }))
     if (error) setError('')
   }
 
@@ -42,13 +37,13 @@ const LoginPage: React.FC = () => {
 
     try {
       const response = await loginMutation(formData).unwrap()
-      login(response.tokens, response.user)
+      login(response.access_token, response.user)
       
-      // Редирект на страницу, с которой пришли, или на главную
       const from = location.state?.from?.pathname || '/'
       navigate(from, { replace: true })
     } catch (err: any) {
-      setError(err.data?.error || 'Ошибка входа. Проверьте данные.')
+      console.error('Login error:', err)
+      setError(err.data?.error || 'Ошибка входа. Проверьте email и пароль.')
     }
   }
 
@@ -76,8 +71,16 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Временно убираем Google OAuth до исправления основного логина */}
+        
         {/* Форма */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -114,14 +117,6 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Ошибка */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {/* Кнопка входа */}
           <div>
             <button
               type="submit"
@@ -134,18 +129,16 @@ const LoginPage: React.FC = () => {
               {isLoading ? 'Входим...' : 'Войти'}
             </button>
           </div>
-
-          {/* Дополнительные ссылки */}
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                Забыли пароль?
-              </a>
-            </div>
-          </div>
         </form>
 
-        {/* Возврат на главную */}
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Тестовые данные для входа:<br/>
+            Email: <code>test@test.com</code><br/>
+            Пароль: <code>testpass123</code>
+          </p>
+        </div>
+
         <div className="text-center">
           <Link
             to="/"

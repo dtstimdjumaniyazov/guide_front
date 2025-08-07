@@ -20,19 +20,33 @@ export interface RegisterRequest {
 export interface LoginResponse {
   message: string
   user: User
-  tokens: {
-    access: string
-    refresh: string
-  }
+  access_token: string
 }
 
 export interface RegisterResponse {
   message: string
   user: User
-  tokens: {
-    access: string
-    refresh: string
-  }
+  access_token: string
+}
+
+// Новые типы для Google OAuth2
+export interface GoogleAuthRequest {
+  access_token: string  // Google access token
+}
+
+export interface ConvertTokenRequest {
+  grant_type: 'convert_token'
+  client_id: string
+  backend: 'google-oauth2'
+  token: string  // Google access token
+}
+
+export interface ConvertTokenResponse {
+  access_token: string
+  expires_in: number
+  token_type: 'Bearer'
+  scope: string
+  refresh_token: string
 }
 
 
@@ -59,22 +73,30 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
+    // Google OAuth2 авторизация
+    googleAuth: builder.mutation<ConvertTokenResponse, ConvertTokenRequest>({
+      query: (tokenData) => ({
+        url: 'auth/convert-token/',
+        method: 'POST',
+        body: tokenData,
+      }),
+      invalidatesTags: ['User'],
+    }),
+
     // Выход
-    logout: builder.mutation<{ message: string }, { refresh_token: string }>({
+    logout: builder.mutation<{ message: string }, { token: string, clien_id: string }>({
       query: (data) => ({
-        url: 'user/logout/',
+        url: 'auth/revoke-token/',
         method: 'POST',
         body: data,
       }),
       invalidatesTags: ['User'],
     }),
 
-
-
-    // Обновление токена
-    refreshToken: builder.mutation<{ access: string }, { refresh: string }>({
+    // Обновление токена OAuth2 формат
+    refreshToken: builder.mutation<{ access_token: string; refresh_token: string }, {grant_type: 'refresh_token', refresh_token: string, client_id: string}>({
       query: (data) => ({
-        url: 'user/token/refresh/',
+        url: 'auth/token/',
         method: 'POST',
         body: data,
       }),
@@ -85,6 +107,7 @@ export const authApi = baseApi.injectEndpoints({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useGoogleAuthMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
 } = authApi

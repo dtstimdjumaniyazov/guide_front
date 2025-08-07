@@ -1,26 +1,36 @@
 // src/pages/InstitutionsPage.tsx
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { useGetInstitutionsQuery } from '../../store/api/institutionsApi'
+import { useGetInstitutionsQuery, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
 import { useDebounce } from '../../hooks/useDebounce'
 // import { formatters } from '../../hooks/formatters'
 import { LoadingCard } from '../../components/Loading'
 import { Pagination } from '../../components/Pagination'
 import type { InstitutionFilters } from '../../types'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { InstitutionCard } from '../institutionsCard'
+import { InstitutionCard } from '../InstitutionsCard'
 
 const InstitutionsPage: React.FC = () => {
   useDocumentTitle('Каталог учреждений')
   const [searchParams, setSearchParams] = useSearchParams()
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   
-  // Извлекаем параметры из URL
+  // ✅ ДОБАВЛЯЕМ: Запрос типов учреждений
+  const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
+  
+  // ✅ ИСПРАВЛЯЕМ: Извлекаем параметры из URL включая institution_type_id
   const [filters, setFilters] = useState<InstitutionFilters>({
     search: searchParams.get('search') || '',
     page: parseInt(searchParams.get('page') || '1'),
     page_size: 12,
-    ordering: searchParams.get('ordering') || '-created_at'
+    ordering: searchParams.get('ordering') || '-created_at',
+    // ✅ ДОБАВЛЯЕМ: Извлекаем тип учреждения из URL
+    institution_type_id: searchParams.get('institution_type_id') ? parseInt(searchParams.get('institution_type_id')!) : undefined,
+    age_group: searchParams.get('age_group') || undefined,
+    services: searchParams.get('services') || undefined,
+    price_min: searchParams.get('price_min') ? parseInt(searchParams.get('price_min')!) : undefined,
+    price_max: searchParams.get('price_max') ? parseInt(searchParams.get('price_max')!) : undefined,
+    has_media: searchParams.get('has_media') === 'true' ? true : undefined
   })
 
   const debouncedSearch = useDebounce(filters.search, 500)
@@ -31,13 +41,20 @@ const InstitutionsPage: React.FC = () => {
     search: debouncedSearch
   })
 
-  // Обновляем URL при изменении фильтров
+  // ✅ ИСПРАВЛЯЕМ: Обновляем URL при изменении фильтров
   useEffect(() => {
     const params = new URLSearchParams()
     
     if (filters.search) params.set('search', filters.search)
     if (filters.page && filters.page > 1) params.set('page', filters.page.toString())
     if (filters.ordering && filters.ordering !== '-created_at') params.set('ordering', filters.ordering)
+    // ✅ ДОБАВЛЯЕМ: Сохраняем тип учреждения в URL
+    if (filters.institution_type_id) params.set('institution_type_id', filters.institution_type_id.toString())
+    if (filters.age_group) params.set('age_group', filters.age_group)
+    if (filters.services) params.set('services', filters.services)
+    if (filters.price_min) params.set('price_min', filters.price_min.toString())
+    if (filters.price_max) params.set('price_max', filters.price_max.toString())
+    if (filters.has_media) params.set('has_media', 'true')
     
     setSearchParams(params)
   }, [filters, setSearchParams])
@@ -55,6 +72,32 @@ const InstitutionsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // ✅ ДОБАВЛЯЕМ: Обработчик клика по категории
+  const handleCategoryClick = (typeId: number) => {
+    if (filters.institution_type_id === typeId) {
+      // Если уже выбран этот тип, убираем фильтр
+      handleFilterChange({ institution_type_id: undefined })
+    } else {
+      // Устанавливаем новый фильтр
+      handleFilterChange({ institution_type_id: typeId })
+    }
+  }
+
+  const handleShowAll = () => {
+    handleFilterChange({ institution_type_id: undefined })
+  }
+
+  // ✅ ДОБАВЛЯЕМ: Функция сброса всех фильтров
+  const handleClearAllFilters = () => {
+    setFilters({
+      search: '',
+      page: 1,
+      page_size: 12,
+      ordering: '-created_at'
+    })
+    setIsFiltersOpen(false)
+  }
+
   const sortOptions = [
     { value: '-created_at', label: 'Новые' },
     { value: 'created_at', label: 'Старые' },
@@ -64,6 +107,68 @@ const InstitutionsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* ✅ ДОБАВЛЯЕМ: Категории учреждений */}
+      <div className="bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Категории учреждений
+            </h2>
+            <p className="text-gray-600">
+              Выберите подходящую категорию, чтобы найти именно то, что нужно вашему ребенку
+            </p>
+          </div>
+
+          {typesLoading ? (
+            <div className="flex justify-center">
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 p-4 rounded-lg bg-gray-100 animate-pulse min-w-[120px]">
+                    <div className="w-8 h-8 bg-gray-300 rounded-full mx-auto mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="flex gap-3 overflow-x-auto pb-2 max-w-full">
+                {/* Кнопка "Все категории" */}
+                <button
+                  onClick={handleShowAll}
+                  className={`flex-shrink-0 px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-md font-medium whitespace-nowrap ${
+                    !filters.institution_type_id
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Все категории
+                </button>
+
+                {/* Категории типов учреждений */}
+                {institutionTypes?.map((type) => {
+                  const isSelected = filters.institution_type_id === type.id
+                  
+                  return (
+                    <button
+                      key={type.id}
+                      onClick={() => handleCategoryClick(type.id)}
+                      className={`flex-shrink-0 px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-md font-medium whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Заголовок и поиск */}
         <div className="mb-8">
@@ -116,6 +221,90 @@ const InstitutionsPage: React.FC = () => {
               Фильтры
             </button>
           </div>
+
+          {/* ✅ ДОБАВЛЯЕМ: Активные фильтры */}
+          {(filters.search || filters.institution_type_id || filters.age_group || filters.services || filters.price_min || filters.price_max || filters.has_media) && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              {filters.search && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                  Поиск: {filters.search}
+                  <button
+                    onClick={() => handleFilterChange({ search: '' })}
+                    className="ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              {filters.institution_type_id && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                  Тип: {institutionTypes?.find(t => t.id === filters.institution_type_id)?.name}
+                  <button
+                    onClick={() => handleFilterChange({ institution_type_id: undefined })}
+                    className="ml-2 text-purple-600 hover:text-purple-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              {filters.age_group && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                  Возраст: {filters.age_group}
+                  <button
+                    onClick={() => handleFilterChange({ age_group: undefined })}
+                    className="ml-2 text-green-600 hover:text-green-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              {filters.services && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                  Услуги: {filters.services}
+                  <button
+                    onClick={() => handleFilterChange({ services: undefined })}
+                    className="ml-2 text-yellow-600 hover:text-yellow-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              {(filters.price_min || filters.price_max) && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
+                  Цена: {filters.price_min || 0} - {filters.price_max || '∞'}
+                  <button
+                    onClick={() => handleFilterChange({ price_min: undefined, price_max: undefined })}
+                    className="ml-2 text-red-600 hover:text-red-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              {filters.has_media && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
+                  С фото
+                  <button
+                    onClick={() => handleFilterChange({ has_media: undefined })}
+                    className="ml-2 text-indigo-600 hover:text-indigo-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              
+              <button
+                onClick={handleClearAllFilters}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200"
+              >
+                Очистить все ✕
+              </button>
+            </div>
+          )}
 
           {/* Панель фильтров */}
           {isFiltersOpen && (
@@ -188,15 +377,7 @@ const InstitutionsPage: React.FC = () => {
               
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
                 <button
-                  onClick={() => {
-                    setFilters({
-                      search: '',
-                      page: 1,
-                      page_size: 12,
-                      ordering: '-created_at'
-                    })
-                    setIsFiltersOpen(false)
-                  }}
+                  onClick={handleClearAllFilters}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                 >
                   Сбросить фильтры
@@ -270,15 +451,7 @@ const InstitutionsPage: React.FC = () => {
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
               <button
-                onClick={() => {
-                  setFilters({
-                    search: '',
-                    page: 1,
-                    page_size: 12,
-                    ordering: '-created_at'
-                  })
-                  setIsFiltersOpen(false)
-                }}
+                onClick={handleClearAllFilters}
                 className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg transition-colors duration-200"
               >
                 Сбросить фильтры

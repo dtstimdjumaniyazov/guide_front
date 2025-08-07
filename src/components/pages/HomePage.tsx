@@ -1,26 +1,35 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useGetInstitutionsQuery, useGetPublicStatsQuery } from '../../store/api/institutionsApi'
+import { useGetInstitutionsQuery, useGetPublicStatsQuery, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
 import { LoadingCard } from '../../components/Loading'
 import { formatters } from '../../hooks/formatters'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { InstitutionCard } from '../institutionsCard'
+import { InstitutionCard } from '../InstitutionsCard'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import GoogleSignInButton from '../GoogleSignInButton'
+import { useAuth } from '../../providers/AuthProvider'
+// import { useGoogleAuthMutation } from '../../store/api/authApi'
 
+const GOOGLE_AUTH_CLIENT_ID = "686536602525-niv44cuc5gmrvn6bqssf0um8tv05tuq7.apps.googleusercontent.com"
 
 const HomePage: React.FC = () => {
   useDocumentTitle('Главная')
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const { isAuthenticated, login } = useAuth()
+  // const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
   
   // Получаем статистику
   const { data: stats, isLoading: statsLoading } = useGetPublicStatsQuery()
+
+  // Получаем типы учреждений
+  const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
 
   // Получаем популярные учреждения
   const { data: institutionsData, isLoading: institutionsLoading } = useGetInstitutionsQuery({
     page_size: 6,
     ordering: '-created_at'
   })
-  console.log(institutionsData)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,32 +38,43 @@ const HomePage: React.FC = () => {
     }
   }
 
-  const categories = [
-    {
-      name: 'Детские сады',
-      icon: '🏫',
-      description: 'Государственные и частные детские сады',
-      link: '/institutions?search=детский сад'
-    },
-    {
-      name: 'Кружки и секции',
-      icon: '🎨',
-      description: 'Творческие и развивающие кружки',
-      link: '/institutions?search=кружок'
-    },
-    {
-      name: 'Спорт',
-      icon: '⚽',
-      description: 'Спортивные секции и школы',
-      link: '/institutions?search=спорт'
-    },
-    {
-      name: 'Языковые школы',
-      icon: '🗣️',
-      description: 'Изучение иностранных языков',
-      link: '/institutions?search=язык'
-    }
-  ]
+  // const handleGoogleSignIn = async (tokenResponse: any) => {
+  //   try {
+  //     const result = await googleAuthMutation({
+  //       grant_type: 'convert_token',
+  //       client_id: 'HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX',
+  //       backend: 'google-oauth2',
+  //       token: tokenResponse.access_token,
+  //     }).unwrap()
+
+  //     // Извлекаем информацию о пользователе из Google профиля
+  //     const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+  //       headers: {
+  //         Authorization: `Bearer ${tokenResponse.access_token}`,
+  //       },
+  //     })
+  //     const googleUser = await userInfo.json()
+
+  //     // Создаем объект пользователя в формате, который ожидает приложение
+  //     const user = {
+  //       id: googleUser.id,
+  //       email: googleUser.email,
+  //       full_name: googleUser.name,
+  //       first_name: googleUser.given_name,
+  //       last_name: googleUser.family_name,
+  //       role: 'user',
+  //       is_active: true,
+  //       phone: '',
+  //       date_joined: new Date().toISOString(),
+  //       avatar_url: googleUser.picture,
+  //     }
+
+  //     login(result.access_token, user)
+  //     console.log('Google sign in successful:', result)
+  //   } catch (error) {
+  //     console.error('Google sign in failed:', error)
+  //   }
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,6 +89,25 @@ const HomePage: React.FC = () => {
             <p className="text-xl sm:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
               Детские сады, кружки, спортивные секции и развивающие центры в одном месте
             </p>
+
+            {/* Кнопка входа через Google - показываем только если не авторизован
+            {!isAuthenticated && (
+              <div className="mb-8">
+                <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 max-w-md mx-auto">
+                  <p className="text-lg mb-4 text-blue-100">
+                    Войдите для персональных рекомендаций
+                  </p>
+                  <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+                    <div className="flex justify-center">
+                      <GoogleSignInButton 
+                        handleGoogleSignIn={handleGoogleSignIn}
+                        isLoading={googleAuthLoading}
+                      />
+                    </div>
+                  </GoogleOAuthProvider>
+                </div>
+              </div>
+            )} */}
 
             {/* Поиск */}
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
@@ -150,117 +189,127 @@ const HomePage: React.FC = () => {
         </div>
       )}
 
-      {/* Категории */}
+      {/* Динамические категории */}
       <div className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Категории учреждений
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600">
               Выберите подходящую категорию, чтобы найти именно то, что нужно вашему ребенку
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                to={category.link}
-                className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 text-center group"
-              >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-200">
-                  {category.icon}
+          {typesLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white p-6 rounded-xl shadow-lg animate-pulse">
+                  <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                  <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-300 rounded"></div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {category.name}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {category.description}
-                </p>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : institutionTypes && institutionTypes.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {institutionTypes.map((type) => (
+                <Link
+                  key={type.id}
+                  to={`/institutions?institution_type_id=${type.id}`}
+                  className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                      {type?.icon || '🏫'}
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {type.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {type.description}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500">
+              <p>Пока нет доступных категорий</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Популярные учреждения */}
-      <div className="bg-gray-100 py-16">
+      <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Новые учреждения
-            </h2>
-            <p className="text-gray-600">
-              Недавно добавленные детские учреждения
-            </p>
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Новые учреждения
+              </h2>
+              <p className="text-gray-600">
+                Недавно добавленные детские учреждения
+              </p>
+            </div>
+            <Link
+              to="/institutions"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Показать все
+            </Link>
           </div>
 
           {institutionsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <LoadingCard count={6} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <LoadingCard key={i} />
+              ))}
             </div>
-          ) : institutionsData?.results.length ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {institutionsData.results.map((institution) => (
-                  <InstitutionCard 
-                    key={institution.id} 
-                    institution={institution} 
-                  />
-                ))}
-              </div>
-              
-              <div className="text-center">
-                <Link
-                  to="/institutions"
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-                >
-                  Посмотреть все учреждения
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </>
+          ) : institutionsData && institutionsData.results.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {institutionsData.results.map((institution) => (
+                <InstitutionCard key={institution.id} institution={institution} />
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🏫</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Пока учреждений нет
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Станьте первым, кто добавит детское учреждение!
-              </p>
-              <Link
-                to="/submit"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                Добавить учреждение
-              </Link>
+            <div className="text-center text-gray-500">
+              <p>Пока нет доступных учреждений</p>
             </div>
           )}
         </div>
       </div>
 
       {/* CTA секция */}
-      <div className="bg-blue-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Есть учреждение для детей?
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Есть детское учреждение?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Добавьте ваше учреждение на платформу и помогите родителям найти лучшее для их детей
+          <p className="text-xl text-blue-100 mb-8">
+            Добавьте его в наш каталог и расскажите родителям о ваших услугах
           </p>
-          <Link
-            to="/submit"
-            className="inline-flex items-center px-8 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg shadow-lg transition-colors duration-200 text-lg"
-          >
-            Добавить учреждение
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* {isAuthenticated ? (
+              <Link
+                to="/submit"
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-200"
+              >
+                Добавить учреждение
+              </Link>
+            ) : (
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                <p className="text-blue-100 mb-3">Войдите через Google, чтобы добавить учреждение</p>
+                <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+                  <GoogleSignInButton 
+                    handleGoogleSignIn={handleGoogleSignIn}
+                    isLoading={googleAuthLoading}
+                  />
+                </GoogleOAuthProvider>
+              </div>
+            )} */}
+          </div>
         </div>
       </div>
     </div>

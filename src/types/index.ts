@@ -44,6 +44,7 @@ export type MediaType = 'photo' | 'video'
 // Учреждение (полная версия)
 export interface Institution extends BaseEntity {
   institution_type?: InstitutionType
+  institution_type_name?: string 
   name: string
   description: string
   address: string
@@ -88,6 +89,8 @@ export interface InstitutionListItem {
   created_at: string
   is_approved: boolean
   is_favorited?: boolean
+  institution_type?: InstitutionType
+  institution_type_name?: string
 }
 
 // Избранное учреждение
@@ -198,6 +201,9 @@ export interface InstitutionFilters extends PaginationParams {
   has_media?: boolean
   is_approved?: boolean
   ordering?: string
+  institution_type?: number
+  institution_type_id?: number
+  institution_type_name?: string
 }
 
 // Формы

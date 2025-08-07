@@ -1,4 +1,3 @@
-// src/providers/AuthProvider.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
 import { setCredentials, logout, selectIsAuthenticated, selectCurrentUser, selectIsLoading } from '../store/slices/authSlice'
@@ -9,7 +8,7 @@ interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (tokens: { access: string; refresh: string }, user: User) => void
+  login: (accessToken: string, user: User, refreshToken?: string) => void
   logout: () => void
   refetchUser: () => void
 }
@@ -52,10 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [userData, error, dispatch])
 
-  const handleLogin = (tokens: { access: string; refresh: string }, user: User) => {
+  const handleLogin = (accessToken: string, user: User, refreshToken?: string) => {
     dispatch(setCredentials({
-      accessToken: tokens.access,
-      refreshToken: tokens.refresh,
+      accessToken,
+      refreshToken,
       user
     }))
   }
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated,
     isLoading: isLoading || (isAuthenticated && userQueryLoading && !userData),
-    login: handleLogin,
+    login: (accessToken, user) => handleLogin(accessToken, user),
     logout: handleLogout,
     refetchUser,
   }

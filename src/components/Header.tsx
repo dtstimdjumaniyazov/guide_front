@@ -1,24 +1,32 @@
-// src/components/Header.tsx
 import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, useRole } from '../providers/AuthProvider'
-import { useLogoutMutation } from '../store/api/authApi'
+import { useLogoutMutation, useGoogleAuthMutation } from '../store/api/authApi'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import GoogleSignInButton from '../components/GoogleSignInButton'
+
+const GOOGLE_AUTH_CLIENT_ID = "686536602525-niv44cuc5gmrvn6bqssf0um8tv05tuq7.apps.googleusercontent.com"
 
 const Header: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, logout, login } = useAuth()
   const { isModerator } = useRole()
   const [logoutMutation] = useLogoutMutation()
+  const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
-      const refreshToken = localStorage.getItem('auth')
-      if (refreshToken) {
-        const parsed = JSON.parse(refreshToken)
-        await logoutMutation({ refresh_token: parsed.refreshToken }).unwrap()
+      const authData = localStorage.getItem('auth')
+      if (authData) {
+        const parsed = JSON.parse(authData)
+        if (parsed.refreshToken) {
+          await logoutMutation({ 
+            refresh_token: parsed.refreshToken 
+          }).unwrap()
+        }
       }
     } catch (error) {
       console.error('Logout error:', error)
@@ -26,6 +34,44 @@ const Header: React.FC = () => {
       logout()
       navigate('/')
       setIsUserMenuOpen(false)
+    }
+  }
+
+  const handleGoogleSignIn = async (tokenResponse: any) => {
+    try {
+      const result = await googleAuthMutation({
+        grant_type: 'convert_token',
+        client_id: 'HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX',
+        backend: 'google-oauth2',
+        token: tokenResponse.access_token,
+      }).unwrap()
+
+      // Извлекаем информацию о пользователе из Google профиля
+      const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+      })
+      const googleUser = await userInfo.json()
+
+      // Создаем объект пользователя в формате, который ожидает приложение
+      const user = {
+        id: googleUser.id,
+        email: googleUser.email,
+        full_name: googleUser.name,
+        first_name: googleUser.given_name,
+        last_name: googleUser.family_name,
+        role: 'user',
+        is_active: true,
+        phone: '',
+        date_joined: new Date().toISOString(),
+        avatar_url: googleUser.picture,
+      }
+
+      login(result.access_token, user)
+      // console.log('Google sign in successful:', result)
+    } catch (error) {
+      console.error('Google sign in failed:', error)
     }
   }
 
@@ -80,7 +126,7 @@ const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* Пользовательское меню */}
+          {/* Пользовательское меню / Google Auth */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="relative">
@@ -88,16 +134,16 @@ const Header: React.FC = () => {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                 >
-                  {user?.avatar ? (
+                  {user?.avatar_url || user?.avatar ? (
                     <img
-                      src={user.avatar}
+                      src={user.avatar_url || user.avatar}
                       alt="Avatar"
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">
-                        {user?.first_name?.[0] || user?.email[0].toUpperCase()}
+                        {user?.first_name?.[0] || user?.full_name?.[0] || user?.email[0].toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -180,19 +226,14 @@ const Header: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  to="/auth/login"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-                >
-                  Войти
-                </Link>
-                <Link
-                  to="/auth/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-                >
-                  Регистрация
-                </Link>
+              /* Google OAuth кнопка для неавторизованных пользователей */
+              <div className="flex items-center">
+                <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+                  <GoogleSignInButton 
+                    handleGoogleSignIn={handleGoogleSignIn}
+                    isLoading={googleAuthLoading}
+                  />
+                </GoogleOAuthProvider>
               </div>
             )}
 
@@ -212,6 +253,7 @@ const Header: React.FC = () => {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="space-y-2">
+              {/* Навигационные ссылки */}
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
@@ -226,6 +268,91 @@ const Header: React.FC = () => {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Мобильная авторизация для неавторизованных */}
+              {!isAuthenticated && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="px-3">
+                    <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+                      <GoogleSignInButton 
+                        handleGoogleSignIn={handleGoogleSignIn}
+                        isLoading={googleAuthLoading}
+                      />
+                    </GoogleOAuthProvider>
+                  </div>
+                </div>
+              )}
+
+              {/* Мобильные ссылки для авторизованных пользователей */}
+              {isAuthenticated && (
+                <div className="pt-4 border-t border-gray-200 space-y-1">
+                  <div className="px-3 py-2 text-sm text-gray-500 border-b border-gray-200 pb-3 mb-2">
+                    <div className="flex items-center space-x-2">
+                      {user?.avatar_url || user?.avatar ? (
+                        <img
+                          src={user.avatar_url || user.avatar}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {user?.first_name?.[0] || user?.full_name?.[0] || user?.email[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900">{user?.full_name || 'Пользователь'}</p>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/profile"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <span className="mr-3">👤</span>
+                    Профиль
+                  </Link>
+                  
+                  {userLinks.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="mr-3">{link.icon}</span>
+                      {link.label}
+                    </Link>
+                  ))}
+                  
+                  {isModerator && moderatorLinks.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="mr-3">{link.icon}</span>
+                      {link.label}
+                    </Link>
+                  ))}
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsMenuOpen(false)
+                    }}
+                    className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    <span className="mr-3">🚪</span>
+                    Выйти
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

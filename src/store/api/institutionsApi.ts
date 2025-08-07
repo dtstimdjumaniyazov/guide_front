@@ -5,6 +5,7 @@ export interface InstitutionType {
   id: number
   name: string
   description: string
+  icon?: string
 }
 
 export interface InstitutionMedia {
@@ -171,6 +172,12 @@ export interface SearchSuggestions {
 
 export const institutionsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    // Получение типов учреждений
+    getInstitutionTypes: builder.query<InstitutionType[], void>({
+      query: () => 'institution/types/',
+      providesTags: [{ type: 'InstitutionType', id: 'LIST' }],
+    }),
+
     // Получение списка учреждений
     getInstitutions: builder.query<PaginatedResponse<InstitutionListItem>, InstitutionFilters | void>({
       query: (filters = {}) => ({
@@ -418,6 +425,7 @@ export const institutionsApi = baseApi.injectEndpoints({
 })
 
 export const {
+  useGetInstitutionTypesQuery,
   useGetInstitutionsQuery,
   useGetInstitutionQuery,
   useCreateSubmissionMutation,

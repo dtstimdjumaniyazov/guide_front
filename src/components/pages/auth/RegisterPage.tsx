@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useRegisterMutation } from '../../../store/api/authApi'
 import { useAuth } from '../../../providers/AuthProvider'
 import { LoadingSpinner } from '../../../components/Loading'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import GoogleSignInButton from '../../GoogleSignInButton'
+
+const GOOGLE_AUTH_CLIENT_ID = "686536602525-niv44cuc5gmrvn6bqssf0um8tv05tuq7.apps.googleusercontent.com"
 
 const RegisterPage: React.FC = () => {
   useDocumentTitle('Регистрация')
@@ -81,7 +86,8 @@ const RegisterPage: React.FC = () => {
 
     try {
       const response = await registerMutation(formData).unwrap()
-      login(response.tokens, response.user)
+      // ОБНОВЛЕНО: используем новый формат токенов OAuth2
+      login(response.access_token, response.user)
       
       // Редирект на страницу, с которой пришли, или на главную
       const from = location.state?.from?.pathname || '/'
@@ -92,6 +98,20 @@ const RegisterPage: React.FC = () => {
       } else {
         setErrors(prev => ({ ...prev, general: 'Ошибка регистрации. Попробуйте еще раз.' }))
       }
+    }
+  }
+
+  const handleGoogleSignIn = async (response: any) => {
+    try {
+      const res = await axios.post(`http://127.0.0.1:8000/auth/convert-token/`, {
+        grant_type: 'convert_token',
+        client_id: 'HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX',
+        backend: 'google-oauth2',
+        token: response.access_token,
+      });
+      console.log('Data: ', res.data)
+    } catch (error) {
+      console.error('Google sign in failed', error);
     }
   }
 
@@ -106,7 +126,7 @@ const RegisterPage: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Создание аккаунта
+            Создать аккаунт
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Уже есть аккаунт?{' '}
@@ -114,9 +134,14 @@ const RegisterPage: React.FC = () => {
               to="/auth/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              Войдите
+              Войти
             </Link>
           </p>
+          <div>
+            <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+              <GoogleSignInButton handleGoogleSignIn={handleGoogleSignIn} />
+            </GoogleOAuthProvider>
+          </div>
         </div>
 
         {/* Форма */}
@@ -138,7 +163,7 @@ const RegisterPage: React.FC = () => {
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                placeholder="Введите ваш email"
+                placeholder="your@email.com"
               />
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
@@ -153,12 +178,14 @@ const RegisterPage: React.FC = () => {
                   id="first_name"
                   name="first_name"
                   type="text"
+                  autoComplete="given-name"
                   value={formData.first_name}
                   onChange={handleChange}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Имя"
                 />
               </div>
+              
               <div>
                 <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
                   Фамилия
@@ -167,6 +194,7 @@ const RegisterPage: React.FC = () => {
                   id="last_name"
                   name="last_name"
                   type="text"
+                  autoComplete="family-name"
                   value={formData.last_name}
                   onChange={handleChange}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -184,6 +212,7 @@ const RegisterPage: React.FC = () => {
                 id="phone"
                 name="phone"
                 type="tel"
+                autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${

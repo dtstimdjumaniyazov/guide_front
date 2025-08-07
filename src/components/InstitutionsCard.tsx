@@ -84,6 +84,15 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
           </div>
         )}
         
+        {/* ✅ ДОБАВЛЕНО: Бадж с типом учреждения */}
+        {institution.institution_type_name && (
+          <div className="absolute top-3 left-3">
+            <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full font-medium">
+              {institution.institution_type_name}
+            </span>
+          </div>
+        )}
+        
         {/* Счетчик медиафайлов */}
         {institution.media_count > 0 && (
           <div className="absolute top-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
@@ -103,13 +112,25 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
         </p>
         
         <div className="space-y-2 mb-4">
+          {/* ✅ ДОБАВЛЕНО: Отображение типа учреждения в краткой информации */}
+          {institution.institution_type_name && (
+            <div className="flex items-center text-sm text-gray-500">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span className="font-medium text-gray-700">Тип:</span>
+              <span className="ml-1">{institution.institution_type_name}</span>
+            </div>
+          )}
+
           {showFullAddress && (
             <div className="flex items-center text-sm text-gray-500">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {formatters.truncateText(institution.address, 50)}
+              <span className="font-medium text-gray-700">Адрес:</span>
+              <span className="ml-1">{formatters.truncateText(institution.address, 50)}</span>
             </div>
           )}
           
@@ -117,14 +138,16 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
             </svg>
-            {institution.age_group}
+            <span className="font-medium text-gray-700">Возраст:</span>
+            <span className="ml-1">{institution.age_group}</span>
           </div>
           
           <div className="flex items-center text-sm text-gray-500">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
-            {institution.price_range}
+            <span className="font-medium text-gray-700">Цена:</span>
+            <span className="ml-1">{institution.price_range}</span>
           </div>
           
           {showServices && institution.services_display && (
@@ -132,7 +155,8 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
               <svg className="w-4 h-4 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
-              <span className="line-clamp-2">{formatters.truncateText(institution.services_display, 80)}</span>
+              <span className="font-medium text-gray-700">Услуги:</span>
+              <span className="ml-1 line-clamp-2">{formatters.truncateText(institution.services_display, 80)}</span>
             </div>
           )}
         </div>

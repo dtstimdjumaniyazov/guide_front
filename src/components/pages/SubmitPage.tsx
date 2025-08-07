@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCreateSubmissionMutation, useUploadSubmissionMediaMutation } from '../../store/api/institutionsApi'
+import { useCreateSubmissionMutation, useUploadSubmissionMediaMutation, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
 import { formatters } from '../../hooks/formatters'
 import { validators } from '../../hooks/validators'
 import { LoadingSpinner } from '../../components/Loading'
 import type { InstitutionSubmissionData } from '../../types'
-import { MediaUpload } from '../../components/mediaUpload'
-import type { MediaFile } from '../../components/mediaUpload'
+import { MediaUpload } from '../../components/MediaUpload'
+import type { MediaFile } from '../../components/MediaUpload'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 interface FormErrors {
@@ -21,6 +21,7 @@ const SubmitPage: React.FC = () => {
   const navigate = useNavigate()
   const [createSubmission, { isLoading: isSubmitting }] = useCreateSubmissionMutation()
   const [uploadSubmissionMedia] = useUploadSubmissionMediaMutation()
+  const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
   useDocumentTitle('Формирование заявки')
   
   const [formData, setFormData] = useState<InstitutionSubmissionData>({
@@ -40,6 +41,7 @@ const SubmitPage: React.FC = () => {
     schedule: '',
     latitude: 0,
     longitude: 0,
+    institution_type: 0,
     media_files: [],
   })
 
@@ -143,6 +145,7 @@ const SubmitPage: React.FC = () => {
         if (formData.description.length < 50) newErrors.description = 'Описание должно содержать минимум 50 символов'
         if (!formData.age_group.trim()) newErrors.age_group = 'Возрастная группа обязательна'
         if (!formData.price_range.trim()) newErrors.price_range = 'Ценовой диапазон обязателен'
+        if (!formData.institution_type || formData.institution_type === 0) newErrors.institution_type = 'Выберите тип учреждения'
         break
 
       case 2:
@@ -215,6 +218,7 @@ const SubmitPage: React.FC = () => {
           price_range: formData.price_range,
           services: formData.services,
           schedule: formData.schedule,
+          institution_type: formData.institution_type,
           latitude: formData.latitude,
           longitude: formData.longitude,
         }
@@ -343,6 +347,38 @@ const SubmitPage: React.FC = () => {
                 placeholder="Например: Детский сад 'Солнышко'"
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип учреждения *
+              </label>
+              {typesLoading ? (
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
+                  Загрузка типов...
+                </div>
+              ) : (
+                <select
+                  value={formData.institution_type}
+                  onChange={(e) => handleInputChange('institution_type', parseInt(e.target.value))}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.institution_type ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                >
+                  <option value={0}>Выберите тип учреждения</option>
+                  {institutionTypes?.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.institution_type && <p className="mt-1 text-sm text-red-600">{errors.institution_type}</p>}
+              {institutionTypes && formData?.institution_type !== undefined && formData?.institution_type > 0 && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {institutionTypes.find(t => t.id === formData.institution_type)?.description}
+                </p>
+              )}
             </div>
 
             <div>

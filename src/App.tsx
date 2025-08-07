@@ -6,8 +6,8 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import HomePage from './components/pages/HomePage'
 import InstitutionsPage from './components/pages/InstitutionsPage'
 import InstitutionDetailPage from './components/pages/InstitutionDetailPage'
-import LoginPage from './components/pages/auth/LoginPage'
-import RegisterPage from './components/pages/auth/RegisterPage'
+// import LoginPage from './components/pages/auth/LoginPage'
+// import RegisterPage from './components/pages/auth/RegisterPage'
 import ProfilePage from './components/pages/ProfilePage'
 import FavoritesPage from './components/pages/FavoritesPage'
 import SubmitPage from './components/pages/SubmitPage'
@@ -82,11 +82,11 @@ function App() {
             } />
           </Route>
 
-          {/* Маршруты авторизации без Layout */}
+          {/* Маршруты авторизации без Layout
           <Route path="auth">
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
-          </Route>
+          </Route> */}
 
           {/* Страницы ошибок */}
           <Route path="403" element={<ForbiddenPage />} />

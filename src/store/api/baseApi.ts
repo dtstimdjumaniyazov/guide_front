@@ -6,9 +6,11 @@ import type { RootState } from '../index'
 
 // Типы для токенов
 interface RefreshResponse {
-  access: string
-  refresh: string
+  access_token: string
+  refresh_token: string
 }
+
+const OAUTH2_CLIENT_ID = "HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX"
 
 // Базовый query с автоматическим обновлением токенов
 const baseQuery = fetchBaseQuery({
@@ -23,7 +25,7 @@ const baseQuery = fetchBaseQuery({
   },
 })
 
-// Query с автоматическим refresh токена
+// Query с автоматическим refresh токена для OAuth2
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
@@ -38,9 +40,13 @@ const baseQueryWithReauth: BaseQueryFn<
     if (refreshToken) {
       const refreshResult = await baseQuery(
         {
-          url: 'user/token/refresh/',
+          url: 'auth/token/',
           method: 'POST',
-          body: { refresh: refreshToken },
+          body: {
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+            client_id: OAUTH2_CLIENT_ID
+          },
         },
         api,
         extraOptions
@@ -50,8 +56,8 @@ const baseQueryWithReauth: BaseQueryFn<
         const data = refreshResult.data as RefreshResponse
         // Сохраняем новые токены
         api.dispatch(setCredentials({
-          accessToken: data.access,
-          refreshToken: data.refresh,
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
         }))
         
         // Повторяем оригинальный запрос с новым токеном
@@ -74,6 +80,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
   tagTypes: [
+    'InstitutionType',
     'Institution', 
     'User', 
     'Favorite', 
