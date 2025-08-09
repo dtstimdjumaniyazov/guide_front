@@ -5,18 +5,17 @@ import { LoadingCard } from '../../components/Loading'
 import { formatters } from '../../hooks/formatters'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { InstitutionCard } from '../InstitutionsCard'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import GoogleSignInButton from '../GoogleSignInButton'
-import { useAuth } from '../../providers/AuthProvider'
+// import { GoogleOAuthProvider } from '@react-oauth/google'
+// import GoogleSignInButton from '../GoogleSignInButton'
+// import { useAuth } from '../../providers/AuthProvider'
 // import { useGoogleAuthMutation } from '../../store/api/authApi'
 
-const GOOGLE_AUTH_CLIENT_ID = "686536602525-niv44cuc5gmrvn6bqssf0um8tv05tuq7.apps.googleusercontent.com"
 
 const HomePage: React.FC = () => {
   useDocumentTitle('Главная')
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
-  const { isAuthenticated, login } = useAuth()
+  // const { isAuthenticated, login } = useAuth()
   // const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
   
   // Получаем статистику
@@ -42,7 +41,7 @@ const HomePage: React.FC = () => {
   //   try {
   //     const result = await googleAuthMutation({
   //       grant_type: 'convert_token',
-  //       client_id: 'HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX',
+  //       client_id: import.meta.env.VITE_CLIENT_ID,
   //       backend: 'google-oauth2',
   //       token: tokenResponse.access_token,
   //     }).unwrap()

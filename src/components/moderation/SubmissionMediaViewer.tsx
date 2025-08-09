@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { BASE_URL } from '../../constants'
 
 interface MediaFile {
   file_url: string
@@ -39,7 +40,7 @@ export const SubmissionMediaViewer: React.FC<SubmissionMediaViewerProps> = ({ me
     if (fileUrl.startsWith('http')) {
       return fileUrl
     }
-    const baseUrl = 'http://localhost:8000'
+    const baseUrl = BASE_URL
     return fileUrl.startsWith('/') ? `${baseUrl}${fileUrl}` : `${baseUrl}/${fileUrl}`
   }
 

@@ -3,13 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useGetInstitutionTypesQuery } from '../store/api/institutionsApi'
 import { LoadingSpinner } from './Loading'
 
-interface Category {
-  id: number
-  name: string
-  description: string
-  icon: string
-  count?: number
-}
+// interface Category {
+//   id: number
+//   name: string
+//   description: string
+//   icon: string
+//   count?: number
+// }
 
 // Соответствие типов иконкам
 const typeIcons: Record<string, string> = {

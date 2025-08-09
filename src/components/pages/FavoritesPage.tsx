@@ -1,4 +1,3 @@
-// src/pages/FavoritesPage.tsx
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGetFavoritesQuery, useRemoveFromFavoritesMutation } from '../../store/api/institutionsApi'
@@ -7,7 +6,7 @@ import { useAuth } from '../../providers/AuthProvider'
 import { LoadingSpinner, LoadingCard } from '../../components/Loading'
 import { SimplePagination } from '../../components/Pagination'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { InstitutionCard } from '../institutionsCard'
+import { InstitutionCard } from '../InstitutionsCard'
 
 const FavoritesPage: React.FC = () => {
   useDocumentTitle('Избранные учреждения')

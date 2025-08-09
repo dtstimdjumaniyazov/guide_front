@@ -1,9 +1,7 @@
-// src/pages/InstitutionsPage.tsx
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useGetInstitutionsQuery, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
 import { useDebounce } from '../../hooks/useDebounce'
-// import { formatters } from '../../hooks/formatters'
 import { LoadingCard } from '../../components/Loading'
 import { Pagination } from '../../components/Pagination'
 import type { InstitutionFilters } from '../../types'

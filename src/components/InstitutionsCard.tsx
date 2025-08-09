@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { formatters } from '../hooks/formatters'
 import type { InstitutionListItem } from '../types'
+import { BASE_URL } from '../constants'
 
 interface InstitutionCardProps {
   institution: InstitutionListItem
@@ -24,7 +25,7 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
     }
     
     // Добавляем базовый URL сервера
-    const baseUrl = 'http://localhost:8000'
+    const baseUrl = BASE_URL
     
     // Если путь начинается с /, добавляем базовый URL
     if (imagePath.startsWith('/')) {

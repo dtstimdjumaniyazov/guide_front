@@ -3,6 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { setCredentials, logout } from '../slices/authSlice'
 import type { RootState } from '../index'
+import { BASE_URL } from '../../constants'
 
 // Типы для токенов
 interface RefreshResponse {
@@ -14,7 +15,7 @@ const OAUTH2_CLIENT_ID = "HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX"
 
 // Базовый query с автоматическим обновлением токенов
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'http://localhost:8000/', // Замените на ваш Django URL
+  baseUrl: BASE_URL, // Замените на ваш Django URL
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.accessToken

@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './providers/AuthProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
-// Импорты страниц (пока создадим заглушки)
 import HomePage from './components/pages/HomePage'
 import InstitutionsPage from './components/pages/InstitutionsPage'
 import InstitutionDetailPage from './components/pages/InstitutionDetailPage'

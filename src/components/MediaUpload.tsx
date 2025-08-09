@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { BASE_URL } from '../constants'
 
 export interface MediaFile {
   file: File | string
@@ -211,7 +212,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     // Если это строка (URL с сервера)
     if (typeof file.file === 'string') {
       // Добавляем базовый URL если нужно
-      const baseUrl = 'http://localhost:8000' // замените на ваш backend URL
+      const baseUrl = BASE_URL // замените на ваш backend URL
       return file.file.startsWith('http') ? file.file : `${baseUrl}${file.file}`
     }
     

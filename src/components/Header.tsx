@@ -5,7 +5,7 @@ import { useLogoutMutation, useGoogleAuthMutation } from '../store/api/authApi'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 
-const GOOGLE_AUTH_CLIENT_ID = "686536602525-niv44cuc5gmrvn6bqssf0um8tv05tuq7.apps.googleusercontent.com"
+const GOOGLE_AUTH_CLIENT_ID = import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID
 
 const Header: React.FC = () => {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ const Header: React.FC = () => {
     try {
       const result = await googleAuthMutation({
         grant_type: 'convert_token',
-        client_id: 'HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX',
+        client_id: import.meta.env.VITE_CLIENT_ID,
         backend: 'google-oauth2',
         token: tokenResponse.access_token,
       }).unwrap()
