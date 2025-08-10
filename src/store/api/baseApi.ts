@@ -11,7 +11,7 @@ interface RefreshResponse {
   refresh_token: string
 }
 
-const OAUTH2_CLIENT_ID = "HFkcZQSZSYYgiLDuyRW3ZDHsM1ScGxGx2Z9kmocX"
+const OAUTH2_CLIENT_ID = import.meta.env.VITE_CLIENT_ID
 
 // Базовый query с автоматическим обновлением токенов
 const baseQuery = fetchBaseQuery({
