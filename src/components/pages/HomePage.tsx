@@ -82,7 +82,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              Вместе подберем лучшее
+              Вместе подберем лучшее для
               <span className="block text-yellow-300">вашего ребенка</span>
             </h1>
             <p className="text-xl sm:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
