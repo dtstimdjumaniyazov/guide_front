@@ -68,6 +68,12 @@ const Header: React.FC = () => {
         avatar_url: googleUser.picture,
       }
 
+      localStorage.setItem("auth", JSON.stringify({
+        accessToken: result.access_token,
+        refreshToken: result.refresh_token,
+        user: result.user, // или `user`, если ты собираешь вручную
+      }));
+
       login(result.access_token, user)
       // console.log('Google sign in successful:', result)
     } catch (error) {
