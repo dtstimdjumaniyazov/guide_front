@@ -39,6 +39,8 @@ const Header: React.FC = () => {
 
   const handleGoogleSignIn = async (tokenResponse: any) => {
     try {
+      console.log('1. Google token response:', tokenResponse)
+
       const result = await googleAuthMutation({
         grant_type: 'convert_token',
         client_id: import.meta.env.VITE_CLIENT_ID,
@@ -46,29 +48,37 @@ const Header: React.FC = () => {
         token: tokenResponse.access_token,
       }).unwrap()
 
-      // Извлекаем информацию о пользователе из Google профиля
-      const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.access_token}`,
-        },
-      })
-      const googleUser = await userInfo.json()
+      console.log('2. Backend result (full):', result)
+      console.log('3. result.access_token:', result.access_token)
+      console.log('4. result.refresh_token:', result.refresh_token)
+      console.log('5. result.user:', result.user)
+      console.log('6. Before login - localStorage:', localStorage.getItem("auth"))
 
-      // Создаем объект пользователя в формате, который ожидает приложение
-      const user = {
-        id: googleUser.id,
-        email: googleUser.email,
-        full_name: googleUser.name,
-        first_name: googleUser.given_name,
-        last_name: googleUser.family_name,
-        role: 'user',
-        is_active: true,
-        phone: '',
-        date_joined: new Date().toISOString(),
-        avatar_url: googleUser.picture,
-      }
+      // // Извлекаем информацию о пользователе из Google профиля
+      // const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      //   headers: {
+      //     Authorization: `Bearer ${tokenResponse.access_token}`,
+      //   },
+      // })
+      // const googleUser = await userInfo.json()
+
+      // // Создаем объект пользователя в формате, который ожидает приложение
+      // const user = {
+      //   id: googleUser.id,
+      //   email: googleUser.email,
+      //   full_name: googleUser.name,
+      //   first_name: googleUser.given_name,
+      //   last_name: googleUser.family_name,
+      //   role: 'user',
+      //   is_active: true,
+      //   phone: '',
+      //   date_joined: new Date().toISOString(),
+      //   avatar_url: googleUser.picture,
+      // }
 
       login(result.access_token, result.user, result.refresh_token)
+      console.log('7. After login - localStorage:', localStorage.getItem("auth"))
+      
       // console.log('Google sign in successful:', result)
     } catch (error) {
       console.error('Google sign in failed:', error)
