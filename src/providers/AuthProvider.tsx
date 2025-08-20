@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated,
     isLoading: isLoading || (isAuthenticated && userQueryLoading && !userData),
-    login: (accessToken, user) => handleLogin(accessToken, user),
+    login: (accessToken, user, refreshToken) => handleLogin(accessToken, user, refreshToken),
     logout: handleLogout,
     refetchUser,
   }
