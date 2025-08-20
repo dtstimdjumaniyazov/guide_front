@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
 import { setCredentials, logout, selectIsAuthenticated, selectCurrentUser, selectIsLoading } from '../store/slices/authSlice'
-import { useGetUserInfoQuery } from '../store/api/userApi'
+import { useGetProfileQuery } from '../store/api/userApi'
 import type { User } from '../store/slices/authSlice'
 
 interface AuthContextType {
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error, 
     isLoading: userQueryLoading,
     refetch 
-  } = useGetUserInfoQuery(undefined, {
+  } = useGetProfileQuery(undefined, {
     skip: !isAuthenticated || !initialCheckComplete,
   })
 
