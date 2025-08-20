@@ -74,7 +74,11 @@ const Header: React.FC = () => {
         user: result.user, // или `user`, если ты собираешь вручную
       }));
 
-      login(result.access_token, user)
+      console.log('Before login - localStorage auth:', localStorage.getItem("auth"))
+
+      login(result.access_token, result.user, result.refresh_token)
+
+      console.log('After login - localStorage auth:', localStorage.getItem("auth"))
       // console.log('Google sign in successful:', result)
     } catch (error) {
       console.error('Google sign in failed:', error)
