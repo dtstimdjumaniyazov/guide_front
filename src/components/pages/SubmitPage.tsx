@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateSubmissionMutation, useUploadSubmissionMediaMutation, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
-import { formatters } from '../../hooks/formatters'
 import { validators } from '../../hooks/validators'
 import { LoadingSpinner } from '../../components/Loading'
 import type { InstitutionSubmissionData } from '../../types'
@@ -274,8 +273,7 @@ const SubmitPage: React.FC = () => {
         }
       }
 
-      // Показываем сообщение об успехе
-      alert('Заявка успешно отправлена на модерацию!')
+      // Перенаправление после успешной подачи заявки
       navigate('/institutions')
 
     } catch (error: any) {
@@ -717,132 +715,239 @@ const SubmitPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Краткая информация</h3>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Название</dt>
-                  <dd className="text-sm text-gray-900">{formData.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Возрастная группа</dt>
-                  <dd className="text-sm text-gray-900">{formData.age_group}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Адрес</dt>
-                  <dd className="text-sm text-gray-900">{formData.address}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Телефон</dt>
-                  <dd className="text-sm text-gray-900">{formatters.formatPhone(formData.contact_phone)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Ценовой диапазон</dt>
-                  <dd className="text-sm text-gray-900">{formData.price_range}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Количество услуг</dt>
-                  <dd className="text-sm text-gray-900">{formData.services?.length || 0}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Медиафайлы</dt>
-                  <dd className="text-sm text-gray-900">
-                    {formData.media_files?.length || 0} файлов
-                    {formData.media_files && formData.media_files.length > 0 && (
-                      <span className="text-gray-500">
-                        {' '}(📸 {formData.media_files.filter(f => f.media_type === 'photo').length}, 
-                        🎥 {formData.media_files.filter(f => f.media_type === 'video').length})
-                      </span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Координаты</dt>
-                  <dd className="text-sm text-gray-900">
-                    {formData.latitude && formData.longitude && formData.latitude !== 0 && formData.longitude !== 0
-                      ? `${formData.latitude.toFixed(4)}, ${formData.longitude.toFixed(4)}`
-                      : 'Не указаны'
-                    }
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Услуги */}
-            {formData.services && formData.services.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Услуги ({formData.services.length})
+            {/* Полная сводка данных */}
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Сводка информации об учреждении
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {formData.services.map((service, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-                    >
-                      {service}
-                    </span>
-                  ))}
-                </div>
               </div>
-            )}
-
-            {/* Расписание */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Расписание</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                  {formData.schedule || 'Расписание не указано'}
-                </pre>
-              </div>
-            </div>
-
-            {/* Превью медиафайлов */}
-            {formData.media_files && formData.media_files.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Загруженные файлы ({formData.media_files.length})
-                </h3>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {formData.media_files.map((file, index) => (
-                    <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                      {file.media_type === 'photo' ? (
-                        <img
-                          src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
-                          alt={file.caption || `Фото ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      ) : (
-                        <video
-                          src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
-                          className="w-full h-full object-cover"
-                          muted
-                          preload="metadata"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      )}
-                      <div className="absolute bottom-1 left-1">
-                        <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded">
-                          {file.media_type === 'photo' ? '📸' : '🎥'}
-                        </span>
+              
+              <div className="p-6 space-y-6">
+                {/* Основная информация */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Основная информация
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Название:</span>
+                        <p className="text-gray-900 font-medium">{formData.name || '—'}</p>
                       </div>
-                      {file.caption && (
-                        <div className="absolute bottom-1 right-1">
-                          <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded" title={file.caption}>
-                            💬
-                          </span>
-                        </div>
-                      )}
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Тип учреждения:</span>
+                        <p className="text-gray-900">
+                          {formData.institution_type && institutionTypes
+                            ? institutionTypes.find(t => t.id === formData.institution_type)?.name || '—'
+                            : '—'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Возрастная группа:</span>
+                        <p className="text-gray-900">{formData.age_group || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Ценовой диапазон:</span>
+                        <p className="text-gray-900">{formData.price_range || '—'}</p>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Контактная информация
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Телефон:</span>
+                        <p className="text-gray-900">{formData.contact_phone || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Веб-сайт:</span>
+                        <p className="text-gray-900">
+                          {formData.website ? (
+                            <a 
+                              href={formData.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline break-all"
+                            >
+                              {formData.website}
+                            </a>
+                          ) : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Координаты:</span>
+                        <p className="text-gray-900">
+                          {formData.latitude && formData.longitude && formData.latitude !== 0 && formData.longitude !== 0
+                            ? `${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
+                            : '—'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Медиафайлы:</span>
+                        <p className="text-gray-900">
+                          {formData.media_files?.length || 0} файлов
+                          {formData.media_files && formData.media_files.length > 0 && (
+                            <span className="text-gray-500">
+                              {' '}(📸 {formData.media_files.filter(f => f.media_type === 'photo').length}, 
+                              🎥 {formData.media_files.filter(f => f.media_type === 'video').length})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Описание */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Описание учреждения
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                      {formData.description || '—'}
+                    </p>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {formData.description.length} символов
+                    </div>
+                  </div>
+                </div>
+
+                {/* Адрес */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Адрес
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 leading-relaxed">
+                      {formData.address || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Услуги */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Услуги и программы ({formData.services?.length || 0})
+                  </h4>
+                  {formData.services && formData.services.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.services.map((service, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">Услуги не указаны</p>
+                  )}
+                </div>
+
+                {/* Расписание */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Режим работы и расписание
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                      {formData.schedule || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Социальные сети */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Социальные сети
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { key: 'instagram', name: 'Instagram', icon: '📸', color: 'pink' },
+                      { key: 'facebook', name: 'Facebook', icon: '📘', color: 'blue' },
+                      { key: 'telegram', name: 'Telegram', icon: '💬', color: 'sky' }
+                    ].map(({ key, name, icon, color }) => (
+                      <div key={key} className="flex items-center space-x-3">
+                        <span className="text-2xl">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-700">{name}</p>
+                          {formData.social_links?.[key as keyof typeof formData.social_links] ? (
+                            <a
+                              href={formData.social_links[key as keyof typeof formData.social_links]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm text-blue-600 hover:text-blue-800 underline truncate block`}
+                            >
+                              {formData.social_links[key as keyof typeof formData.social_links]}
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Не указан</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Превью медиафайлов */}
+                {formData.media_files && formData.media_files.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Загруженные файлы ({formData.media_files.length})
+                    </h4>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {formData.media_files.map((file, index) => (
+                        <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          {file.media_type === 'photo' ? (
+                            <img
+                              src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
+                              alt={file.caption || `Фото ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          ) : (
+                            <video
+                              src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          )}
+                          <div className="absolute bottom-1 left-1">
+                            <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded">
+                              {file.media_type === 'photo' ? '📸' : '🎥'}
+                            </span>
+                          </div>
+                          {file.caption && (
+                            <div className="absolute bottom-1 right-1">
+                              <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded" title={file.caption}>
+                                💬
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Ошибки */}
             {errors.media_upload && (
@@ -899,6 +1004,26 @@ const SubmitPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Финальное подтверждение */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                    Готово к отправке
+                  </h3>
+                  <p className="text-green-800 text-sm">
+                    Проверьте всю информацию выше. После отправки заявка будет рассмотрена модератором. 
+                    Вы получите уведомление о результатах рассмотрения.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )
 

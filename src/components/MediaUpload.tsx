@@ -6,7 +6,7 @@ export interface MediaFile {
   file: File | string
   media_type: 'photo' | 'video'
   caption?: string
-  order?: number
+  order: number
   preview?: string
 }
 
@@ -259,7 +259,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           className="w-full h-full object-cover"
           muted
           preload="metadata"
-          onError={(e) => {
+          onError={() => {
             console.error('Ошибка загрузки видео:', previewUrl)
           }}
         />

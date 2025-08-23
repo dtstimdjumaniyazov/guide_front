@@ -123,6 +123,8 @@ export interface MediaFile {
   order: number
   preview?: string
   uploaded_at?: string
+  file_name?: string;
+  file_size?: number;
 }
 
 // Данные учреждения в заявке

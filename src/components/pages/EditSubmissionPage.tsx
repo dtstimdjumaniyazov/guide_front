@@ -1,15 +1,23 @@
 // src/pages/EditSubmissionPage.tsx
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useGetSubmissionQuery, useCreateSubmissionMutation } from '../../store/api/institutionsApi'
+import { 
+  useGetSubmissionQuery, 
+  useUpdateSubmissionDataMutation,
+  useGetInstitutionTypesQuery,
+  useUploadSubmissionMediaMutation
+} from '../../store/api/institutionsApi'
 import { useAuth } from '../../providers/AuthProvider'
 import { validators } from '../../hooks/validators'
 import { LoadingPage, LoadingSpinner } from '../../components/Loading'
 import type { InstitutionSubmissionData } from '../../types'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { MediaUpload } from '../../components/MediaUpload'
+import type { MediaFile } from '../../components/MediaUpload'
 
 interface FormErrors {
-  [key: string]: string
+  [key: string]: string | undefined
+  media_upload?: string
 }
 
 const EditSubmissionPage: React.FC = () => {
@@ -23,7 +31,9 @@ const EditSubmissionPage: React.FC = () => {
     skip: !id
   })
   
-  const [updateSubmission, { isLoading: isSubmitting }] = useCreateSubmissionMutation()
+  const [updateSubmissionData, { isLoading: isSubmitting }] = useUpdateSubmissionDataMutation()
+  const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
+  const [uploadSubmissionMedia] = useUploadSubmissionMediaMutation()
   
   const [formData, setFormData] = useState<InstitutionSubmissionData>({
     name: '',
@@ -42,6 +52,8 @@ const EditSubmissionPage: React.FC = () => {
     schedule: '',
     latitude: 0,
     longitude: 0,
+    institution_type: 0,
+    media_files: [],
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -52,8 +64,11 @@ const EditSubmissionPage: React.FC = () => {
   useEffect(() => {
     if (submission?.institution_data) {
       const data = submission.institution_data
-      setFormData({
+
+      // Основные данные формы
+      const baseFormData = {
         name: data.name || '',
+        institution_type: data.institution_type || 0,
         description: data.description || '',
         address: data.address || '',
         contact_phone: data.contact_phone || '',
@@ -69,6 +84,49 @@ const EditSubmissionPage: React.FC = () => {
         schedule: data.schedule || '',
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
+      }
+
+      // Правильная обработка медиафайлов
+      let existingMediaFiles: MediaFile[] = []
+      
+      if (data.media_files && Array.isArray(data.media_files)) {
+        existingMediaFiles = data.media_files
+          .filter((mediaFile: any) => {
+            // Фильтруем только существующие файлы (с file_url), исключаем File объекты
+            return mediaFile.file_url && typeof mediaFile.file_url === 'string'
+          })
+          .map((mediaFile: any, index: number) => {
+            // console.log(`Обработка существующего медиафайла ${index}:`, mediaFile)
+            
+            // Для существующих файлов используем file_url
+            const fileUrl = mediaFile.file_url
+            
+            // Формируем полный URL (добавляем базовый URL сервера)
+            const baseUrl = import.meta.env.VITE_BASE_URL
+            const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrl}${fileUrl}`
+            
+            const processedFile = {
+              file: fullUrl, // Полный URL существующего файла
+              preview: fullUrl, // Превью - тот же URL
+              caption: mediaFile.caption || '',
+              media_type: mediaFile.media_type || 'photo',
+              order: mediaFile.order !== undefined ? mediaFile.order : index,
+              id: mediaFile.id, // ID файла для возможного удаления
+              // Дополнительные поля для отображения
+              file_name: mediaFile.file_name,
+              file_size: mediaFile.file_size,
+              uploaded_at: mediaFile.uploaded_at,
+              // Сохраняем оригинальный URL
+              originalUrl: fileUrl,
+              isExisting: true // Флаг что это существующий файл
+            }
+            return processedFile
+          })
+      }
+      
+      setFormData({
+        ...baseFormData,
+        media_files: existingMediaFiles
       })
     }
   }, [submission])
@@ -76,7 +134,7 @@ const EditSubmissionPage: React.FC = () => {
   const steps = [
     { id: 1, name: 'Основная информация', icon: '🏫' },
     { id: 2, name: 'Контакты и местоположение', icon: '📍' },
-    { id: 3, name: 'Услуги и расписание', icon: '📋' },
+    { id: 3, name: 'Услуги, расписание и медиа', icon: '📋' },
     { id: 4, name: 'Проверка и отправка', icon: '✅' }
   ]
 
@@ -102,6 +160,54 @@ const EditSubmissionPage: React.FC = () => {
       }
     }))
   }
+
+  const handleMediaChange = (files: MediaFile[]) => {
+    
+    const validatedFiles = files.map((file, index) => {
+      let media_type: 'photo' | 'video' = 'photo'
+      
+      // Для новых File объектов
+      if (typeof file.file !== 'string' && file.file instanceof File) {
+        if (file.file.type.startsWith('video/')) {
+          media_type = 'video'
+        }
+      } 
+      // Для существующих URL файлов
+      else if (typeof file.file === 'string') {
+        // Проверяем расширение в URL
+        const url = file.file.toLowerCase()
+        const extension = url.split('.').pop()?.split('?')[0] // Убираем query параметры
+        
+        if (extension && ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'].includes(extension)) {
+          media_type = 'video'
+        }
+        
+        // Если тип уже определен в данных, используем его
+        if (file.media_type) {
+          media_type = file.media_type
+        }
+      }
+      
+      return {
+        ...file,
+        order: file.order ?? index,
+        caption: file.caption ?? '',
+        media_type: file.media_type ?? media_type
+      }
+    })
+    
+    setFormData(prev => ({ ...prev, media_files: validatedFiles }))
+
+    // Очищаем ошибку медиафайлов при изменении файлов
+    if (errors.media_upload) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors.media_upload
+        return newErrors
+      })
+    }
+  }
+
 
   const addService = () => {
     if (serviceInput.trim() && !formData.services.includes(serviceInput.trim())) {
@@ -130,6 +236,9 @@ const EditSubmissionPage: React.FC = () => {
         if (formData.description.length < 50) newErrors.description = 'Описание должно содержать минимум 50 символов'
         if (!formData.age_group.trim()) newErrors.age_group = 'Возрастная группа обязательна'
         if (!formData.price_range.trim()) newErrors.price_range = 'Ценовой диапазон обязателен'
+        if (!formData.institution_type || formData.institution_type === 0) {
+          newErrors.institution_type = 'Выберите тип учреждения'
+        }
         break
 
       case 2:
@@ -173,11 +282,77 @@ const EditSubmissionPage: React.FC = () => {
     if (!validateStep(3)) return
 
     try {
-      const response = await updateSubmission({
-        institution_data: formData
+      // Обновляем основные данные заявки (без медиафайлов)
+      const response = await updateSubmissionData({
+        id: Number(id),
+        data: {
+          institution_data: {
+            name: formData.name,
+            description: formData.description,
+            address: formData.address,
+            contact_phone: formData.contact_phone,
+            website: formData.website,
+            social_links: formData.social_links,
+            age_group: formData.age_group,
+            price_range: formData.price_range,
+            services: formData.services,
+            schedule: formData.schedule,
+            institution_type: formData.institution_type,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+            // НЕ включаем media_files в основные данные
+          }
+        }
       }).unwrap()
 
-      // Перенаправляем на страницу заявок с уведомлением об успехе
+      // Загружаем только НОВЫЕ медиафайлы (File объекты, не строки)
+      if (formData.media_files && formData.media_files.length > 0) {
+        try {
+          const newFileObjects = formData.media_files
+            .filter(mediaFile => mediaFile.file instanceof File) // Только новые File объекты
+            .map(mediaFile => mediaFile.file as File)
+                    
+          if (newFileObjects.length > 0) {
+            const captions = formData.media_files
+              .filter(mediaFile => mediaFile.file instanceof File)
+              .map(mediaFile => mediaFile.caption || '')
+            
+            const orders = formData.media_files
+              .filter(mediaFile => mediaFile.file instanceof File)
+              .map((mediaFile, index) => mediaFile.order ?? index)
+            
+            const media_types = formData.media_files
+              .filter(mediaFile => mediaFile.file instanceof File)
+              .map(mediaFile => mediaFile.media_type || 'photo')
+
+            await uploadSubmissionMedia({
+              submission_id: Number(id),
+              files: newFileObjects,
+              captions,
+              orders,
+              media_types
+            }).unwrap()
+          }
+        } catch (uploadError: any) {
+          console.error('Ошибка загрузки медиафайлов:', uploadError)
+          
+          setErrors({
+            media_upload: `Заявка обновлена, но возникла ошибка при загрузке новых медиафайлов: ${uploadError.data?.error || uploadError.message || 'Неизвестная ошибка'}`
+          })
+          
+          setTimeout(() => {
+            navigate('/my-submissions', {
+              state: {
+                message: 'Заявка успешно обновлена! Некоторые новые медиафайлы могли не загрузиться.',
+                submissionId: response.submission_id
+              }
+            })
+          }, 2000)
+          return
+        }
+      }
+
+      // Успешное завершение
       navigate('/my-submissions', {
         state: {
           message: 'Заявка успешно обновлена и отправлена на повторное рассмотрение!',
@@ -186,7 +361,24 @@ const EditSubmissionPage: React.FC = () => {
       })
     } catch (error: any) {
       console.error('Submit error:', error)
-      setErrors({ submit: error.data?.message || 'Ошибка при отправке заявки' })
+      
+      let errorMessage = 'Ошибка при отправке заявки'
+      
+      if (error.status === 404) {
+        errorMessage = 'Заявка не найдена или недоступна для редактирования'
+      } else if (error.status === 400) {
+        errorMessage = error.data?.error || 'Неверные данные запроса'
+      } else if (error.data?.error) {
+        errorMessage = error.data.error
+      } else if (error.data?.details) {
+        errorMessage = `Ошибка валидации: ${JSON.stringify(error.data.details)}`
+      } else if (error.data?.message) {
+        errorMessage = error.data.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      setErrors({ submit: errorMessage })
     }
   }
 
@@ -206,6 +398,15 @@ const EditSubmissionPage: React.FC = () => {
         latitude: mockCoords.lat,
         longitude: mockCoords.lng
       }))
+
+      // Очищаем ошибку координат
+      if (errors.coordinates) {
+        setErrors(prev => {
+          const newErrors = { ...prev }
+          delete newErrors.coordinates
+          return newErrors
+        })
+      }
     } catch (error) {
       console.error('Geocoding error:', error)
     }
@@ -289,7 +490,6 @@ const EditSubmissionPage: React.FC = () => {
     )
   }
 
-  // Здесь используем ту же логику рендеринга шагов, что и в SubmitPage
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -309,6 +509,38 @@ const EditSubmissionPage: React.FC = () => {
                 placeholder="Например: Детский сад 'Солнышко'"
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Тип учреждения *
+              </label>
+              {typesLoading ? (
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
+                  Загрузка типов...
+                </div>
+              ) : (
+                <select
+                  value={formData.institution_type || 0}
+                  onChange={(e) => handleInputChange('institution_type', parseInt(e.target.value))}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.institution_type ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                >
+                  <option value={0}>Выберите тип учреждения</option>
+                  {institutionTypes?.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.institution_type && <p className="mt-1 text-sm text-red-600">{errors.institution_type}</p>}
+              {institutionTypes && formData?.institution_type !== undefined && formData?.institution_type > 0 && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {institutionTypes.find(t => t.id === formData.institution_type)?.description}
+                </p>
+              )}
             </div>
 
             <div>
@@ -506,6 +738,9 @@ const EditSubmissionPage: React.FC = () => {
                   </div>
                 </div>
                 {errors.coordinates && <p className="mt-2 text-sm text-red-600">{errors.coordinates}</p>}
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Нажмите "Получить координаты" для автоматического определения по адресу
+                </p>
               </div>
             </div>
           </div>
@@ -557,6 +792,10 @@ const EditSubmissionPage: React.FC = () => {
               )}
               
               {errors.services && <p className="text-sm text-red-600">{errors.services}</p>}
+              
+              <p className="text-xs text-gray-500">
+                Добавьте все услуги, которые предоставляет учреждение
+              </p>
             </div>
 
             <div>
@@ -579,6 +818,183 @@ const EditSubmissionPage: React.FC = () => {
 Группа 5-6 лет: 14:00 - 17:00`}
               />
               {errors.schedule && <p className="mt-1 text-sm text-red-600">{errors.schedule}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Фотографии и видео
+              </label>
+              <p className="text-sm text-gray-600 mb-4">
+                Добавьте или обновите фотографии и видео учреждения. Это поможет родителям лучше понять атмосферу места.
+              </p>
+              
+              {/* Отображение существующих медиафайлов */}
+              {formData.media_files && formData.media_files.some(f => typeof f.file === 'string') && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Загруженные медиафайлы ({formData.media_files.filter(f => typeof f.file === 'string').length})
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-lg">
+                    {formData.media_files
+                      .filter(file => typeof file.file === 'string')
+                      .map((file, index) => {
+                        // console.log(`Отображение медиафайла ${index}:`, file)
+                        // console.log(`URL для отображения: ${file.file}`)
+                        
+                        return (
+                          <div key={file.id || index} className="relative group">
+                            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                              {file.media_type === 'photo' ? (
+                                <img
+                                  src={file.file as string}
+                                  alt={file.caption || `Фото ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onLoad={() => {
+                                    console.log(`✅ Изображение загружено успешно: ${file.file}`)
+                                  }}
+                                  onError={(e) => {
+                                    console.error(`❌ Ошибка загрузки изображения: ${file.file}`);
+                                    console.error('Ошибка:', e);
+                                    // Можно добавить placeholder изображение
+                                    (e.target as HTMLImageElement).style.display = 'none'
+                                  }}
+                                />
+                              ) : (
+                                <video
+                                  src={file.file as string}
+                                  className="w-full h-full object-cover"
+                                  muted
+                                  preload="metadata"
+                                  controls={false}
+                                  onLoadedData={() => {
+                                    console.log(`✅ Видео загружено успешно: ${file.file}`)
+                                  }}
+                                  onError={(e) => {
+                                    console.error(`❌ Ошибка загрузки видео: ${file.file}`)
+                                    console.error('Ошибка:', e)
+                                  }}
+                                />
+                              )}
+                              
+                              {/* Индикатор типа файла */}
+                              <div className="absolute bottom-2 left-2">
+                                <span className="bg-black bg-opacity-70 text-white px-2 py-1 text-xs rounded">
+                                  {file.media_type === 'photo' ? '📸' : '🎥'}
+                                </span>
+                              </div>
+                              
+                              {/* Подпись */}
+                              {file.caption && (
+                                <div className="absolute bottom-2 right-2">
+                                  <span 
+                                    className="bg-black bg-opacity-70 text-white px-2 py-1 text-xs rounded cursor-help" 
+                                    title={file.caption}
+                                  >
+                                    💬
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Кнопка удаления */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  console.log('Удаление файла:', file)
+                                  const updatedFiles = formData.media_files?.filter(f => f !== file) || []
+                                  console.log('Файлы после удаления:', updatedFiles)
+                                  setFormData(prev => ({ ...prev, media_files: updatedFiles }))
+                                }}
+                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Удалить файл"
+                              >
+                                ×
+                              </button>
+                              
+                              {/* Fallback если изображение не загружается */}
+                              {!file.file && (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <div className="text-center">
+                                    <div className="text-2xl mb-1">❌</div>
+                                    <div className="text-xs">Файл не найден</div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Информация о файле */}
+                            <div className="mt-1 text-xs text-gray-500">
+                              <div className="truncate" title={file.file_name || 'Файл'}>
+                                {file.file_name || 'Неизвестный файл'}
+                              </div>
+                              {file.file_size && (
+                                <div className="text-gray-400">
+                                  {(file.file_size / 1024 / 1024).toFixed(1)} MB
+                                </div>
+                              )}
+                              {/* URL для отладки */}
+                              <div className="text-gray-300 truncate text-xs" title={file.file as string}>
+                                {(file.file as string)?.substring(0, 50)}...
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+                  </div>
+                </div>
+              )}
+              
+              {/* Компонент для загрузки новых файлов */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Добавить новые файлы
+                </h4>
+                <MediaUpload
+                  mediaFiles={formData.media_files?.filter(f => f.file instanceof File) || []}
+                  onMediaChange={(newFiles) => {
+                    // Объединяем существующие URL файлы с новыми File объектами
+                    const existingUrlFiles = formData.media_files?.filter(f => typeof f.file === 'string') || []
+                    const allFiles = [...existingUrlFiles, ...newFiles]
+                    handleMediaChange(allFiles)
+                  }}
+                  maxFiles={10 - (formData.media_files?.filter(f => typeof f.file === 'string').length || 0)}
+                  disabled={isSubmitting}
+                  onError={(error: string) => {
+                    setErrors(prev => ({ 
+                      ...prev, 
+                      media_upload: error 
+                    }))
+                  }}
+                />
+              </div>
+              
+              {/* Отображение ошибки медиафайлов */}
+              {errors.media_upload && (
+                <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-600">{errors.media_upload}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Информация о лимитах */}
+              <div className="mt-3 text-xs text-gray-500">
+                💡 Всего файлов: {formData.media_files?.length || 0}/10. 
+                Можно добавить ещё: {10 - (formData.media_files?.length || 0)} файлов
+              </div>
             </div>
           </div>
         )
@@ -605,6 +1021,241 @@ const EditSubmissionPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Полная сводка данных */}
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Сводка информации об учреждении
+                </h3>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* Основная информация */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Основная информация
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Название:</span>
+                        <p className="text-gray-900 font-medium">{formData.name || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Тип учреждения:</span>
+                        <p className="text-gray-900">
+                          {formData.institution_type && institutionTypes
+                            ? institutionTypes.find(t => t.id === formData.institution_type)?.name || '—'
+                            : '—'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Возрастная группа:</span>
+                        <p className="text-gray-900">{formData.age_group || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Ценовой диапазон:</span>
+                        <p className="text-gray-900">{formData.price_range || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Контактная информация
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Телефон:</span>
+                        <p className="text-gray-900">{formData.contact_phone || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Веб-сайт:</span>
+                        <p className="text-gray-900">
+                          {formData.website ? (
+                            <a 
+                              href={formData.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline break-all"
+                            >
+                              {formData.website}
+                            </a>
+                          ) : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Координаты:</span>
+                        <p className="text-gray-900">
+                          {formData.latitude && formData.longitude && formData.latitude !== 0 && formData.longitude !== 0
+                            ? `${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
+                            : '—'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Медиафайлы:</span>
+                        <p className="text-gray-900">
+                          {formData.media_files?.length || 0} файлов
+                          {formData.media_files && formData.media_files.length > 0 && (
+                            <span className="text-gray-500">
+                              {' '}(📸 {formData.media_files.filter(f => f.media_type === 'photo').length}, 
+                              🎥 {formData.media_files.filter(f => f.media_type === 'video').length})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Описание */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Описание учреждения
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                      {formData.description || '—'}
+                    </p>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {formData.description.length} символов
+                    </div>
+                  </div>
+                </div>
+
+                {/* Адрес */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Адрес
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 leading-relaxed">
+                      {formData.address || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Услуги */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Услуги и программы ({formData.services?.length || 0})
+                  </h4>
+                  {formData.services && formData.services.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.services.map((service, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">Услуги не указаны</p>
+                  )}
+                </div>
+
+                {/* Расписание */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Режим работы и расписание
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                      {formData.schedule || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Социальные сети */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                    Социальные сети
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { key: 'instagram', name: 'Instagram', icon: '📸', color: 'pink' },
+                      { key: 'facebook', name: 'Facebook', icon: '📘', color: 'blue' },
+                      { key: 'telegram', name: 'Telegram', icon: '💬', color: 'sky' }
+                    ].map(({ key, name, icon, color }) => (
+                      <div key={key} className="flex items-center space-x-3">
+                        <span className="text-2xl">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-700">{name}</p>
+                          {formData.social_links?.[key as keyof typeof formData.social_links] ? (
+                            <a
+                              href={formData.social_links[key as keyof typeof formData.social_links]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm text-blue-600 hover:text-blue-800 underline truncate block`}
+                            >
+                              {formData.social_links[key as keyof typeof formData.social_links]}
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Не указан</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Превью медиафайлов */}
+                {formData.media_files && formData.media_files.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                      Загруженные файлы ({formData.media_files.length})
+                    </h4>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {formData.media_files.map((file, index) => (
+                        <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          {file.media_type === 'photo' ? (
+                            <img
+                              src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
+                              alt={file.caption || `Фото ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          ) : (
+                            <video
+                              src={file.preview || (typeof file.file === 'string' ? file.file : URL.createObjectURL(file.file as File))}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          )}
+                          <div className="absolute bottom-1 left-1">
+                            <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded">
+                              {file.media_type === 'photo' ? '📸' : '🎥'}
+                            </span>
+                          </div>
+                          {file.caption && (
+                            <div className="absolute bottom-1 right-1">
+                              <span className="bg-black bg-opacity-50 text-white px-1 text-xs rounded" title={file.caption}>
+                                💬
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Статус готовности */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -623,9 +1274,59 @@ const EditSubmissionPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Ошибки отправки */}
+            {errors.media_upload && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-red-800">Ошибка загрузки медиафайлов</h4>
+                    <p className="text-sm text-red-600 mt-1">{errors.media_upload}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {errors.submit && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-600">{errors.submit}</p>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800">Ошибка при отправке</p>
+                    <p className="text-sm text-red-600 mt-1">{errors.submit}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Другие ошибки валидации */}
+            {Object.entries(errors).filter(([key]) => !['media_upload', 'submit'].includes(key)).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-red-800">Необходимо исправить ошибки</h4>
+                    <ul className="text-sm text-red-600 mt-1 list-disc list-inside">
+                      {Object.entries(errors)
+                        .filter(([key]) => !['media_upload', 'submit'].includes(key))
+                        .map(([key, error]) => (
+                          <li key={key}>{error}</li>
+                        ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -663,7 +1364,8 @@ const EditSubmissionPage: React.FC = () => {
                         ? 'border-green-600 bg-green-600 text-white'
                         : 'border-gray-300 bg-white text-gray-500'
                     }`}>
-                      {currentStep > step.id ? (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {currentStep > step.id ? (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (

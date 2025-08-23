@@ -159,6 +159,24 @@ export interface SubmissionCreateRequest {
   }
 }
 
+export interface UpdateSubmissionRequest {
+  institution_data: {
+    name: string
+    description: string
+    address: string
+    contact_phone: string
+    website?: string
+    social_links?: Record<string, string | undefined>
+    age_group: string
+    price_range: string
+    services?: string[]
+    schedule: string
+    latitude: number
+    longitude: number
+    institution_type?: number
+  }
+}
+
 export interface Stats {
   total_institutions: number
   institutions_with_media: number
@@ -207,6 +225,19 @@ export const institutionsApi = baseApi.injectEndpoints({
         body: data,
       }),
       invalidatesTags: [{ type: 'Submission', id: 'LIST' }],
+    }),
+
+    // Обновление заявки на добавление учреждения
+    updateSubmissionData: builder.mutation<{ message: string; submission_id: number }, { id: number; data: UpdateSubmissionRequest }>({
+      query: ({ id, data }) => ({
+        url: `institution/submissions/${id}/update/`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Submission', id },
+        { type: 'Submission', id: 'LIST' },
+      ],
     }),
     
     // Загрузка медиафайлов для заявки
@@ -429,6 +460,7 @@ export const {
   useGetInstitutionsQuery,
   useGetInstitutionQuery,
   useCreateSubmissionMutation,
+  useUpdateSubmissionDataMutation,
   useGetFavoritesQuery,
   useUploadSubmissionMediaMutation,
   useUploadInstitutionMediaMutation,
