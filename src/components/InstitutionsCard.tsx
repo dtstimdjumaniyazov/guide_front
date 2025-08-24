@@ -69,7 +69,7 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
               }}
             />
             {/* Fallback иконка (скрыта по умолчанию) */}
-            <div className="fallback-icon absolute hidden inset-0 bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white">
+            <div className="fallback-icon absolute hidden inset-0 bg-gradient-to-br from-red-400 to-orange-500 items-center justify-center text-white">
               <div className="text-center">
                 <div className="text-4xl mb-2">🚫</div>
                 <div className="text-xs">Ошибка загрузки</div>
