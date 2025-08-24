@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
     support: [
       { label: 'Помощь', path: '/help' },
       { label: 'Правила', path: '/rules' },
-      { label: 'Конфиденциальность', path: '/privacy' },
+      { label: 'Политика конфиденциальности', path: '/privacy' },
       { label: 'Контакты', path: '/contacts' },
     ]
   }

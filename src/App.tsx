@@ -18,6 +18,10 @@ import AboutPage from './components/pages/AboutPage'
 import NotFoundPage from './components/pages/errors/NotFoundPage'
 import ForbiddenPage from './components/pages/errors/ForbiddenPage'
 import Layout from './components/Layout'
+import HelpPage from './components/pages/HelpPage'
+import RulesPage from './components/pages/RulesPage'
+import PrivacyPage from './components/pages/PrivacyPage'
+import ContactsPage from './components/pages/ContactsPage'
 
 function App() {
   return (
@@ -35,6 +39,18 @@ function App() {
             
             {/* О проекте */}
             <Route path="about" element={<AboutPage />} />
+
+            {/* Помощь */}
+            <Route path='help' element={<HelpPage />}/>
+
+            {/* Правила */}
+            <Route path='rules' element={<RulesPage />} />
+
+            {/* Конфиденциальность */}
+            <Route path='privacy' element={<PrivacyPage />} />
+
+            {/* Контакты */}
+            <Route path='contacts' element={<ContactsPage />} />
             
             {/* Защищенные маршруты для авторизованных пользователей */}
             <Route path="profile" element={
