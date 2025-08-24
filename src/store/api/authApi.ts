@@ -53,26 +53,6 @@ export interface ConvertTokenResponse {
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Вход
-    login: builder.mutation<LoginResponse, LoginRequest>({
-      query: (credentials) => ({
-        url: 'user/login/',
-        method: 'POST',
-        body: credentials,
-      }),
-      invalidatesTags: ['User'],
-    }),
-
-    // Регистрация
-    register: builder.mutation<RegisterResponse, RegisterRequest>({
-      query: (userData) => ({
-        url: 'user/register/',
-        method: 'POST',
-        body: userData,
-      }),
-      invalidatesTags: ['User'],
-    }),
-
     // Google OAuth2 авторизация
     googleAuth: builder.mutation<ConvertTokenResponse, ConvertTokenRequest>({
       query: (tokenData) => ({
@@ -84,7 +64,7 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     // Выход
-    logout: builder.mutation<{ message: string }, { token: string, clien_id: string }>({
+    logout: builder.mutation<{ message: string }, { token: string, client_id: string }>({
       query: (data) => ({
         url: 'auth/revoke-token/',
         method: 'POST',
@@ -105,8 +85,6 @@ export const authApi = baseApi.injectEndpoints({
 })
 
 export const {
-  useLoginMutation,
-  useRegisterMutation,
   useGoogleAuthMutation,
   useLogoutMutation,
   useRefreshTokenMutation,

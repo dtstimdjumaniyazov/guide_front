@@ -52,7 +52,7 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
               alt={institution.first_image.caption || institution.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onLoad={() => {
-                console.log('✅ Изображение загружено:', imageUrl)
+                // console.log('✅ Изображение загружено:', imageUrl)
               }}
               onError={(e) => {
                 console.error('❌ Ошибка загрузки изображения:', {
@@ -69,7 +69,7 @@ export const InstitutionCard: React.FC<InstitutionCardProps> = ({
               }}
             />
             {/* Fallback иконка (скрыта по умолчанию) */}
-            <div className="fallback-icon hidden absolute inset-0 bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white">
+            <div className="fallback-icon absolute inset-0 bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white">
               <div className="text-center">
                 <div className="text-4xl mb-2">🚫</div>
                 <div className="text-xs">Ошибка загрузки</div>

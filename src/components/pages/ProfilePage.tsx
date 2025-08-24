@@ -2,6 +2,11 @@ import React from 'react'
 import { useAuth } from '../../providers/AuthProvider'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
+const capitalize = (str?: string) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 const ProfilePage: React.FC = () => {
   const { user } = useAuth()
   useDocumentTitle(`Профиль пользователя`)
@@ -13,7 +18,7 @@ const ProfilePage: React.FC = () => {
           Профиль пользователя
         </h1>
         <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-gray-600">Добро пожаловать, {user?.full_name || user?.email}!</p>
+          <p className="text-gray-600">Добро пожаловать, {capitalize(user?.first_name)} {capitalize(user?.last_name) || user?.email}!</p>
           <p className="text-sm text-gray-500 mt-2">Роль: {user?.role}</p>
         </div>
       </div>
