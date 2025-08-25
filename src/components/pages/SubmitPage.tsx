@@ -7,6 +7,7 @@ import type { InstitutionSubmissionData } from '../../types'
 import { MediaUpload } from '../../components/MediaUpload'
 import type { MediaFile } from '../../components/MediaUpload'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import LocationPicker from '../LocationPicker'
 
 interface FormErrors {
   [key: string]: string | undefined
@@ -211,7 +212,7 @@ const SubmitPage: React.FC = () => {
           description: formData.description,
           address: formData.address,
           contact_phone: formData.contact_phone,
-          website: formData.website,
+          website: validators.normalizeUrl(formData.website || ''),
           social_links: formData.social_links,
           age_group: formData.age_group,
           price_range: formData.price_range,
@@ -293,36 +294,6 @@ const SubmitPage: React.FC = () => {
       setErrors({
         submit: errorMessage
       })
-    }
-  }
-
-  const getLocationFromAddress = async () => {
-    if (!formData.address) return
-
-    try {
-      // Здесь можно использовать геокодинг API (например, Google Geocoding)
-      // Для примера используем заглушку
-      const mockCoords = {
-        lat: 41.2995 + (Math.random() - 0.5) * 0.1, // Примерные координаты Ташкента
-        lng: 69.2401 + (Math.random() - 0.5) * 0.1
-      }
-      
-      setFormData(prev => ({
-        ...prev,
-        latitude: mockCoords.lat,
-        longitude: mockCoords.lng
-      }))
-
-      // Очищаем ошибку координат
-      if (errors.coordinates) {
-        setErrors(prev => {
-          const newErrors = { ...prev }
-          delete newErrors.coordinates
-          return newErrors
-        })
-      }
-    } catch (error) {
-      console.error('Geocoding error:', error)
     }
   }
 
@@ -529,55 +500,29 @@ const SubmitPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Местоположение *
               </label>
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm text-gray-600">
-                    {formData.latitude && formData.longitude && formData.latitude !== 0 && formData.longitude !== 0
-                      ? `Координаты: ${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
-                      : 'Местоположение не указано'
-                    }
-                  </p>
-                  <button
-                    type="button"
-                    onClick={getLocationFromAddress}
-                    className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                  >
-                    Получить координаты
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Широта
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.latitude || ''}
-                      onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                      placeholder="41.2995"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Долгота
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.longitude || ''}
-                      onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                      placeholder="69.2401"
-                    />
-                  </div>
-                </div>
-                {errors.coordinates && <p className="mt-2 text-sm text-red-600">{errors.coordinates}</p>}
-                <p className="text-xs text-gray-500 mt-2">
-                  💡 Нажмите "Получить координаты" для автоматического определения по адресу
-                </p>
-              </div>
+              <LocationPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={(lat, lng) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    latitude: lat,
+                    longitude: lng
+                  }));
+                  // Очищаем ошибку координат
+                  if (errors.coordinates) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.coordinates;
+                      return newErrors;
+                    });
+                  }
+                }}
+                error={errors.coordinates}
+                showManualInput={true}
+                defaultLat={41.2995} // Ташкент
+                defaultLng={69.2401}
+              />
             </div>
           </div>
         )
@@ -772,12 +717,12 @@ const SubmitPage: React.FC = () => {
                         <p className="text-gray-900">
                           {formData.website ? (
                             <a 
-                              href={formData.website} 
+                              href={validators.normalizeUrl(formData.website)} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800 underline break-all"
                             >
-                              {formData.website}
+                              {validators.normalizeUrl(formData.website)}
                             </a>
                           ) : '—'}
                         </p>

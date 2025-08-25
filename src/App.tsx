@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './providers/AuthProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
+import ScrollToTop from './components/ScrollToTop'
 import HomePage from './components/pages/HomePage'
 import InstitutionsPage from './components/pages/InstitutionsPage'
 import InstitutionDetailPage from './components/pages/InstitutionDetailPage'
@@ -27,6 +28,7 @@ function App() {
   return (
     <AuthProvider>
       <div className="App">
+        <ScrollToTop />
         <Routes>
           {/* Публичные маршруты с Layout */}
           <Route path="/" element={<Layout />}>

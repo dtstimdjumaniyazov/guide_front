@@ -6,6 +6,8 @@ import { useAuth } from '../../providers/AuthProvider'
 import { formatters } from '../../hooks/formatters'
 import { LoadingPage } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { FaYandexInternational } from "react-icons/fa6";
+import { SiGooglemaps } from "react-icons/si";
 
 const InstitutionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -17,7 +19,7 @@ const InstitutionDetailPage: React.FC = () => {
   const { data: institution, isLoading, error } = useGetInstitutionQuery(Number(id), {
     skip: !id
   })
-  console.log(institution);
+  // console.log(institution);
 
   useDocumentTitle(`${institution?.name ?? undefined}`)
 
@@ -396,12 +398,22 @@ const InstitutionDetailPage: React.FC = () => {
                   }}
                   className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                  </svg>
-                  Показать на карте
+                  <SiGooglemaps className="w-5 h-5 mr-3 text-blue-600"/>
+                  Показать на карте Google
                 </button>
-              </div>
+                <br />
+                <button
+                  onClick={() => {
+                    // latitude = 41.5465472, longtitude = 60.62.73536
+                    const url = `https://yandex.ru/maps/?ll=${institution.longitude},${institution.latitude}&z=16&pt=${institution.longitude},${institution.latitude},pm2rdm`;
+                    window.open(url, '_blank')
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                >
+                  <FaYandexInternational className="w-5 h-5 mr-3 text-red-500"/>
+                  Показать на карте Яндекс
+                </button>
+              </div>              
             </div>
 
             {/* Информация о добавившем */}
