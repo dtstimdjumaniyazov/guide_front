@@ -11,6 +11,7 @@ export interface User {
   last_name: string
   full_name: string
   avatar?: string
+  avatar_url: string
   role: 'user' | 'moderator' | 'admin'
   date_joined: string
 }

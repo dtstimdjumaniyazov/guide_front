@@ -46,7 +46,8 @@ export interface ConvertTokenResponse {
   expires_in: number
   token_type: 'Bearer'
   scope: string
-  refresh_token: string
+  refresh_token: string,
+  user: User,
 }
 
 
@@ -64,7 +65,7 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     // Выход
-    logout: builder.mutation<{ message: string }, { token: string, client_id: string }>({
+    logout: builder.mutation<{ message: string }, { client_id: string, refresh_token: string }>({
       query: (data) => ({
         url: 'auth/revoke-token/',
         method: 'POST',
