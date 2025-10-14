@@ -48,14 +48,14 @@ const Header: React.FC = () => {
     // Проверяем, давал ли пользователь согласие ранее
     const hasConsent = localStorage.getItem('privacy_consent_accepted')
     
-    // if (hasConsent === 'true') {
-    //   // Если согласие уже есть, входим сразу
-    //   await processGoogleSignIn(tokenResponse)
-    // } else {
+    if (hasConsent === 'true') {
+      // Если согласие уже есть, входим сразу
+      await processGoogleSignIn(tokenResponse)
+    } else {
       // Если согласия нет, показываем модальное окно
       setPendingGoogleToken(tokenResponse)
       setShowPrivacyModal(true)
-    // }
+    }
   }
 
   // Второй шаг: обработка согласия
