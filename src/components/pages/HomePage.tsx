@@ -1,25 +1,28 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useGetInstitutionsQuery, useGetPublicStatsQuery, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
+import { useGetInstitutionsQuery, useGetPublicStatsQuery, useGetInstitutionTypesQuery, useGetFavoritesQuery } from '../../store/api/institutionsApi'
 import { LoadingCard } from '../../components/Loading'
 import { formatters } from '../../hooks/formatters'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { InstitutionCard } from '../InstitutionsCard'
-// import { GoogleOAuthProvider } from '@react-oauth/google'
-// import GoogleSignInButton from '../GoogleSignInButton'
-// import { useAuth } from '../../providers/AuthProvider'
-// import { useGoogleAuthMutation } from '../../store/api/authApi'
+import { useAuth } from '../../providers/AuthProvider'
 
 
 const HomePage: React.FC = () => {
   useDocumentTitle('Главная')
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
-  // const { isAuthenticated, login } = useAuth()
-  // const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
+  
+  const { isAuthenticated } = useAuth()
   
   // Получаем статистику
   const { data: stats, isLoading: statsLoading } = useGetPublicStatsQuery()
+
+  // Получаем личные избранные (только для авторизованных)
+  const { data: favoritesData } = useGetFavoritesQuery(
+    { page: 1, page_size: 1 }, // Запрашиваем минимум для получения count
+    { skip: !isAuthenticated } // Пропускаем запрос если не авторизован
+  )
 
   // Получаем типы учреждений
   const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
@@ -180,7 +183,13 @@ const HomePage: React.FC = () => {
               </div>
               <div>
                 <div className="text-4xl mb-4">♥️</div>
-                <div className="text-3xl font-bold text-gray-900">{formatters.formatNumber(stats.total_favorites)}</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {/* Показываем личную статистику для авторизованных, общую для остальных */}
+                  {isAuthenticated 
+                    ? formatters.formatNumber(favoritesData?.count || 0)
+                    : formatters.formatNumber(stats.total_favorites)
+                  }
+                </div>
                 <div className="text-gray-600">В избранном</div>
               </div>
             </div>
