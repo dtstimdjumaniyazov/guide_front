@@ -14,15 +14,21 @@ const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   
   const { isAuthenticated } = useAuth()
-  
+
   // Получаем статистику
   const { data: stats, isLoading: statsLoading } = useGetPublicStatsQuery()
 
   // Получаем личные избранные (только для авторизованных)
-  const { data: favoritesData } = useGetFavoritesQuery(
+  const { data: favoritesData, isLoading: favoritesLoading, error: favoritesError } = useGetFavoritesQuery(
     { page: 1, page_size: 1 }, // Запрашиваем минимум для получения count
     { skip: !isAuthenticated } // Пропускаем запрос если не авторизован
   )
+  console.log('=== FAVORITES DEBUG ===')
+  console.log('isAuthenticated:', isAuthenticated)
+  console.log('favoritesData:', favoritesData)
+  console.log('favoritesLoading:', favoritesLoading)
+  console.log('favoritesError:', favoritesError)
+  console.log('stats:', stats)
 
   // Получаем типы учреждений
   const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
@@ -39,44 +45,6 @@ const HomePage: React.FC = () => {
       navigate(`/institutions?search=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
-
-  // const handleGoogleSignIn = async (tokenResponse: any) => {
-  //   try {
-  //     const result = await googleAuthMutation({
-  //       grant_type: 'convert_token',
-  //       client_id: import.meta.env.VITE_CLIENT_ID,
-  //       backend: 'google-oauth2',
-  //       token: tokenResponse.access_token,
-  //     }).unwrap()
-
-  //     // Извлекаем информацию о пользователе из Google профиля
-  //     const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-  //       headers: {
-  //         Authorization: `Bearer ${tokenResponse.access_token}`,
-  //       },
-  //     })
-  //     const googleUser = await userInfo.json()
-
-  //     // Создаем объект пользователя в формате, который ожидает приложение
-  //     const user = {
-  //       id: googleUser.id,
-  //       email: googleUser.email,
-  //       full_name: googleUser.name,
-  //       first_name: googleUser.given_name,
-  //       last_name: googleUser.family_name,
-  //       role: 'user',
-  //       is_active: true,
-  //       phone: '',
-  //       date_joined: new Date().toISOString(),
-  //       avatar_url: googleUser.picture,
-  //     }
-
-  //     login(result.access_token, user)
-  //     console.log('Google sign in successful:', result)
-  //   } catch (error) {
-  //     console.error('Google sign in failed:', error)
-  //   }
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
