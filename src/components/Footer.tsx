@@ -1,26 +1,27 @@
 // src/components/Footer.tsx
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear()
-
+  const { t } = useTranslation("footer")
+  
   const footerLinks = {
     main: [
-      { label: 'Главная', path: '/' },
-      { label: 'Учреждения', path: '/institutions' },
-      { label: 'О проекте', path: '/about' },
+      { label: t("main_links.home"), path: '/' },
+      { label: t("main_links.institutions"), path: '/institutions' },
+      { label: t("main_links.about"), path: '/about' },
     ],
     user: [
-      { label: 'Добавить учреждение', path: '/submit' },
-      { label: 'Избранное', path: '/favorites' },
-      { label: 'Мои заявки', path: '/my-submissions' },
+      { label: t("user_links.submit"), path: '/submit' },
+      { label: t("user_links.favorites"), path: '/favorites' },
+      { label: t("user_links.my_submissions"), path: '/my-submissions' },
     ],
     support: [
-      { label: 'Помощь', path: '/help' },
-      { label: 'Правила', path: '/rules' },
-      { label: 'Политика конфиденциальности', path: '/privacy' },
-      { label: 'Контакты', path: '/contacts' },
+      { label: t("support_links.help"), path: '/help' },
+      { label: t("support_links.rules"), path: '/rules' },
+      { label: t("support_links.privacy"), path: '/privacy' },
+      { label: t("support_links.contacts"), path: '/contacts' },
     ]
   }
 
@@ -64,11 +65,10 @@ const Footer: React.FC = () => {
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
                 <span className="text-white font-bold text-xl">🏫</span>
               </div>
-              <span className="text-xl font-bold text-white">Детский Гид</span>
+              <span className="text-xl font-bold text-white">{t("logo_title")}</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              Платформа для поиска лучших детских учреждений в вашем городе. 
-              Детские сады, кружки, спортивные секции и многое другое в одном месте.
+              {t("logo_description")}
             </p>
             
               {/* Социальные сети */}
@@ -88,7 +88,7 @@ const Footer: React.FC = () => {
 
           {/* Основные ссылки */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Навигация</h3>
+            <h3 className="text-white font-semibold mb-4">{t("navigation")}</h3>
             <ul className="space-y-2">
               {footerLinks.main.map((link) => (
                 <li key={link.path}>
@@ -105,7 +105,7 @@ const Footer: React.FC = () => {
 
           {/* Пользовательские ссылки */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Для пользователей</h3>
+            <h3 className="text-white font-semibold mb-4">{t("for_users")}</h3>
             <ul className="space-y-2">
               {footerLinks.user.map((link) => (
                 <li key={link.path}>
@@ -141,7 +141,7 @@ const Footer: React.FC = () => {
             </div>
             
             <div className="text-sm text-gray-400">
-              © {currentYear} Детский Гид. Все права защищены.
+              © 2025 {t("logo_title")}. {t("copyright")}
             </div>
           </div>
         </div>
@@ -152,10 +152,10 @@ const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500">
             <div>
-              Платформа создана с использованием React, TypeScript и Django
+              {t("tech_info")}
             </div>
             <div className="mt-2 sm:mt-0">
-              Версия: 1.0.0 | Последнее обновление: {new Date().toLocaleDateString('ru-RU')}
+              {t("version")}: 1.0.0 | {t("last_update")}: {new Date().toLocaleDateString('ru-RU')}
             </div>
           </div>
         </div>

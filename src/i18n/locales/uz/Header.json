@@ -1,0 +1,26 @@
+{
+  "app_name": "Болалар Гиди",
+
+  "nav": {
+    "home": "Бош саҳифа",
+    "institutions": "Муассасалар",
+    "about": "Лойиҳа ҳақида"
+  },
+
+  "auth": {
+    "sign_in_google": "Google орқали кириш",
+    "logout": "Чиқиш"
+  },
+
+  "user": {
+    "profile": "Профил",
+    "favorites": "Севимлилар",
+    "submit_institution": "Муассаса қўшиш",
+    "my_submissions": "Мурожаатларим",
+    "moderation": "Модерация",
+    "admin": "Админ",
+    "moderator": "Модератор",
+    "user": "Фойдаланувчи",
+    "anonymous": "Фойдаланувчи"
+  }
+}

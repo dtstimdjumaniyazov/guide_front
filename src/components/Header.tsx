@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, useRole } from '../providers/AuthProvider'
 import { useLogoutMutation, useGoogleAuthMutation } from '../store/api/authApi'
@@ -9,6 +11,8 @@ import PrivacyConsentModal from '../components/PrivacyConsentModal'
 const GOOGLE_AUTH_CLIENT_ID = import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID
 
 const Header: React.FC = () => {
+  const { t } = useTranslation("header")
+
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAuthenticated, logout, login } = useAuth()
@@ -99,19 +103,19 @@ const Header: React.FC = () => {
   }
 
   const navLinks = [
-    { path: '/', label: 'Главная', public: true },
-    { path: '/institutions', label: 'Учреждения', public: true },
-    { path: '/about', label: 'О проекте', public: true },
+    { path: '/', label: t("nav.home"), public: true },
+    { path: '/institutions', label: t("nav.institutions"), public: true },
+    { path: '/about', label: t("nav.about"), public: true },
   ]
 
   const userLinks = [
-    { path: '/favorites', label: 'Избранное', icon: '♥' },
-    { path: '/submit', label: 'Добавить учреждение', icon: '+' },
-    { path: '/my-submissions', label: 'Мои заявки', icon: '📋' },
+    { path: '/favorites', label: t("user.favorites"), icon: '♥' },
+    { path: '/submit', label: t("user.submit_institution"), icon: '+' },
+    { path: '/my-submissions', label: t("user.my_submissions"), icon: '📋' },
   ]
 
   const moderatorLinks = [
-    { path: '/moderation', label: 'Модерация', icon: '⚖️' },
+    { path: '/moderation', label: t("user.moderation"), icon: '⚖️' },
   ]
 
   return (
@@ -125,7 +129,7 @@ const Header: React.FC = () => {
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
                   <span className="text-white font-bold text-xl">🏫</span>
                 </div>
-                <span className="text-xl font-bold text-gray-800">Детский Гид</span>
+                <span className="text-xl font-bold text-gray-800">{t("app_name")}</span>
               </Link>
             </div>
 
@@ -144,6 +148,7 @@ const Header: React.FC = () => {
                   {link.label}
                 </Link>
               ))}
+              <LanguageSwitcher />
             </nav>
 
             {/* Пользовательское меню / Google Auth */}
@@ -199,7 +204,7 @@ const Header: React.FC = () => {
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <span className="mr-3">👤</span>
-                            Профиль
+                            {t("user.profile")}
                           </Link>
                           {userLinks.map((link) => (
                             <Link
@@ -238,7 +243,7 @@ const Header: React.FC = () => {
                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                           >
                             <span className="mr-3">🚪</span>
-                            Выйти
+                            {t("auth.logout")}
                           </button>
                         </div>
                       </div>
@@ -369,7 +374,7 @@ const Header: React.FC = () => {
                       className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
                     >
                       <span className="mr-3">🚪</span>
-                      Выйти
+                      {t("auth.logout")}
                     </button>
                   </div>
                 )}

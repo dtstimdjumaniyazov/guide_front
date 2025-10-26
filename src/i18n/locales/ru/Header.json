@@ -1,0 +1,26 @@
+{
+  "app_name": "Детский Гид",
+
+  "nav": {
+    "home": "Главная",
+    "institutions": "Учреждения",
+    "about": "О проекте"
+  },
+
+  "auth": {
+    "sign_in_google": "Войти через Google",
+    "logout": "Выйти"
+  },
+
+  "user": {
+    "profile": "Профиль",
+    "favorites": "Избранное",
+    "submit_institution": "Добавить учреждение",
+    "my_submissions": "Мои заявки",
+    "moderation": "Модерация",
+    "admin": "Администратор",
+    "moderator": "Модератор",
+    "user": "Пользователь",
+    "anonymous": "Пользователь"
+  }
+}
