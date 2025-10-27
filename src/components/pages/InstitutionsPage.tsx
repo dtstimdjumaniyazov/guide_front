@@ -7,9 +7,11 @@ import { Pagination } from '../../components/Pagination'
 import type { InstitutionFilters } from '../../types'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { InstitutionCard } from '../InstitutionsCard'
+import { useTranslation } from 'react-i18next'
 
 const InstitutionsPage: React.FC = () => {
-  useDocumentTitle('Каталог учреждений')
+  const { t } = useTranslation("institutionsPage")
+  useDocumentTitle(t("title"))
   const [searchParams, setSearchParams] = useSearchParams()
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   
@@ -110,10 +112,10 @@ const InstitutionsPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Категории учреждений
+              {t("categories_title")}
             </h2>
             <p className="text-gray-600">
-              Выберите подходящую категорию, чтобы найти именно то, что нужно вашему ребенку
+              {t("categories_subtitle")}
             </p>
           </div>
 
@@ -140,7 +142,7 @@ const InstitutionsPage: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Все категории
+                  {t("all_categories")}
                 </button>
 
                 {/* Категории типов учреждений */}
@@ -171,7 +173,7 @@ const InstitutionsPage: React.FC = () => {
         {/* Заголовок и поиск */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Каталог детских учреждений
+            {t("child_catalog")}
           </h1>
           
           {/* Поиск */}
@@ -180,7 +182,7 @@ const InstitutionsPage: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Поиск по названию, описанию или адресу..."
+                  placeholder={t("search_placeholder")}
                   value={filters.search}
                   onChange={(e) => handleFilterChange({ search: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -216,7 +218,7 @@ const InstitutionsPage: React.FC = () => {
               <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
               </svg>
-              Фильтры
+              {t("filters")}
             </button>
           </div>
 
@@ -225,7 +227,7 @@ const InstitutionsPage: React.FC = () => {
             <div className="mb-6 flex flex-wrap gap-2">
               {filters.search && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  Поиск: {filters.search}
+                  {t("search")}: {filters.search}
                   <button
                     onClick={() => handleFilterChange({ search: '' })}
                     className="ml-2 text-blue-600 hover:text-blue-800"
@@ -237,7 +239,7 @@ const InstitutionsPage: React.FC = () => {
               
               {filters.institution_type_id && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                  Тип: {institutionTypes?.find(t => t.id === filters.institution_type_id)?.name}
+                  {t("type")}: {institutionTypes?.find(t => t.id === filters.institution_type_id)?.name}
                   <button
                     onClick={() => handleFilterChange({ institution_type_id: undefined })}
                     className="ml-2 text-purple-600 hover:text-purple-800"
@@ -249,7 +251,7 @@ const InstitutionsPage: React.FC = () => {
               
               {filters.age_group && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                  Возраст: {filters.age_group}
+                  {t("age")}: {filters.age_group}
                   <button
                     onClick={() => handleFilterChange({ age_group: undefined })}
                     className="ml-2 text-green-600 hover:text-green-800"
@@ -261,7 +263,7 @@ const InstitutionsPage: React.FC = () => {
               
               {filters.services && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                  Услуги: {filters.services}
+                  {t("services_label")}: {filters.services}
                   <button
                     onClick={() => handleFilterChange({ services: undefined })}
                     className="ml-2 text-yellow-600 hover:text-yellow-800"
@@ -273,7 +275,7 @@ const InstitutionsPage: React.FC = () => {
               
               {(filters.price_min || filters.price_max) && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
-                  Цена: {filters.price_min || 0} - {filters.price_max || '∞'}
+                  {t("price")}: {filters.price_min || 0} - {filters.price_max || '∞'}
                   <button
                     onClick={() => handleFilterChange({ price_min: undefined, price_max: undefined })}
                     className="ml-2 text-red-600 hover:text-red-800"
@@ -285,7 +287,7 @@ const InstitutionsPage: React.FC = () => {
               
               {filters.has_media && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
-                  С фото
+                  {t("with_photos")}
                   <button
                     onClick={() => handleFilterChange({ has_media: undefined })}
                     className="ml-2 text-indigo-600 hover:text-indigo-800"
@@ -299,7 +301,7 @@ const InstitutionsPage: React.FC = () => {
                 onClick={handleClearAllFilters}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200"
               >
-                Очистить все ✕
+                {t("clear_all")} ✕
               </button>
             </div>
           )}
@@ -310,7 +312,7 @@ const InstitutionsPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Возрастная группа
+                    {t("filter_age_group")}
                   </label>
                   <input
                     type="text"
@@ -323,7 +325,7 @@ const InstitutionsPage: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Услуги
+                    {t("filter_services")}
                   </label>
                   <input
                     type="text"
@@ -336,7 +338,7 @@ const InstitutionsPage: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Минимальная цена
+                    {t("filter_price_min")}
                   </label>
                   <input
                     type="number"
@@ -349,7 +351,7 @@ const InstitutionsPage: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Максимальная цена
+                    {t("filter_price_max")}
                   </label>
                   <input
                     type="number"
@@ -369,7 +371,7 @@ const InstitutionsPage: React.FC = () => {
                     onChange={(e) => handleFilterChange({ has_media: e.target.checked || undefined })}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Только с фотографиями</span>
+                  <span className="ml-2 text-sm text-gray-700">{t("filter_with_photos")}</span>
                 </label>
               </div>
               
@@ -378,7 +380,7 @@ const InstitutionsPage: React.FC = () => {
                   onClick={handleClearAllFilters}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                 >
-                  Сбросить фильтры
+                  {t("clear_filters")}
                 </button>
               </div>
             </div>
@@ -442,23 +444,23 @@ const InstitutionsPage: React.FC = () => {
           <div className="text-center py-16">
             <div className="text-6xl mb-6">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Учреждения не найдены
+              {t("not_found_title")}
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              По вашему запросу ничего не найдено. Попробуйте изменить параметры поиска или добавьте новое учреждение.
+              {t("not_found_text")}
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
               <button
                 onClick={handleClearAllFilters}
                 className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg transition-colors duration-200"
               >
-                Сбросить фильтры
+                {t("reset_filters")}
               </button>
               <Link
                 to="/submit"
                 className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
               >
-                Добавить учреждение
+                {t("add_institution")}
               </Link>
             </div>
           </div>

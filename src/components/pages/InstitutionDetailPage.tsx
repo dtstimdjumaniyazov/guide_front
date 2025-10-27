@@ -8,8 +8,11 @@ import { LoadingPage } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { FaYandexInternational } from "react-icons/fa6";
 import { SiGooglemaps } from "react-icons/si";
+import { useTranslation } from 'react-i18next'
 
 const InstitutionDetailPage: React.FC = () => {
+  const { t } = useTranslation("institutionDetail")
+
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
@@ -46,7 +49,7 @@ const InstitutionDetailPage: React.FC = () => {
   }
 
   if (isLoading) {
-    return <LoadingPage message="Загрузка информации об учреждении..." />
+    return <LoadingPage message={t("loading")} />
   }
 
   if (error || !institution) {
@@ -55,16 +58,16 @@ const InstitutionDetailPage: React.FC = () => {
         <div className="text-center">
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Учреждение не найдено
+            {t("not_found")}
           </h1>
           <p className="text-gray-600 mb-6">
-            Запрашиваемое учреждение не существует или было удалено.
+            {t("not_found_description")}
           </p>
           <Link
             to="/institutions"
             className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
           >
-            ← Вернуться к каталогу
+            ← {t("back_catalog")}
           </Link>
         </div>
       </div>
@@ -83,7 +86,7 @@ const InstitutionDetailPage: React.FC = () => {
             <ol className="flex items-center space-x-2">
               <li>
                 <Link to="/" className="text-gray-500 hover:text-gray-700">
-                  Главная
+                  {t("back_home")}
                 </Link>
               </li>
               <li>
@@ -93,7 +96,7 @@ const InstitutionDetailPage: React.FC = () => {
               </li>
               <li>
                 <Link to="/institutions" className="text-gray-500 hover:text-gray-700">
-                  Учреждения
+                  {t("inst")}
                 </Link>
               </li>
               <li>
@@ -174,7 +177,7 @@ const InstitutionDetailPage: React.FC = () => {
                 <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white">
                   <div className="text-center">
                     <div className="text-6xl mb-4">🏫</div>
-                    <p className="text-xl">Фотографии пока нет</p>
+                    <p className="text-xl">{t("no_photos")}</p>
                   </div>
                 </div>
               </div>
@@ -220,7 +223,7 @@ const InstitutionDetailPage: React.FC = () => {
             {institution.services && institution.services.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Услуги и программы
+                  {t("services_and")}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {institution.services.map((service, index) => (
@@ -238,7 +241,7 @@ const InstitutionDetailPage: React.FC = () => {
             {/* Расписание */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Режим работы
+                {t("working")}
               </h2>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700 whitespace-pre-line">
@@ -276,7 +279,7 @@ const InstitutionDetailPage: React.FC = () => {
             {/* Контактная информация */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6 sticky top-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Контактная информация
+                {t("contact_info")}
               </h2>
               
               <div className="space-y-4">
@@ -327,7 +330,7 @@ const InstitutionDetailPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-600">Возрастная группа</p>
+                    <p className="text-sm text-gray-600">{t("age_group")}</p>
                     <p className="text-gray-900">{institution.age_group}</p>
                   </div>
                 </div>
@@ -337,7 +340,7 @@ const InstitutionDetailPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                   <div>
-                    <p className="text-sm text-gray-600">Стоимость</p>
+                    <p className="text-sm text-gray-600">{t("price")}</p>
                     <p className="text-gray-900 font-semibold">{institution.price_range}</p>
                   </div>
                 </div>
@@ -346,7 +349,7 @@ const InstitutionDetailPage: React.FC = () => {
               {/* Социальные сети */}
               {Object.keys(institution.social_links).length > 0 && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 mb-3">Мы в социальных сетях</p>
+                  <p className="text-sm text-gray-600 mb-3">{t("social_media")}</p>
                   <div className="flex space-x-3">
                     {institution.social_links.instagram && (
                       <a
@@ -399,7 +402,7 @@ const InstitutionDetailPage: React.FC = () => {
                   className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
                 >
                   <SiGooglemaps className="w-5 h-5 mr-3 text-blue-600"/>
-                  Показать на карте Google
+                  {t("show_on_google_map")}
                 </button>
                 <br />
                 <button
@@ -411,7 +414,7 @@ const InstitutionDetailPage: React.FC = () => {
                   className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
                 >
                   <FaYandexInternational className="w-5 h-5 mr-3 text-red-500"/>
-                  Показать на карте Яндекс
+                  {t("show_on_yandex_map")}
                 </button>
               </div>              
             </div>
@@ -419,21 +422,21 @@ const InstitutionDetailPage: React.FC = () => {
             {/* Информация о добавившем */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Информация о публикации
+                {t("publication_info")}
               </h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-gray-600">Добавил:</span>
+                  <span className="text-gray-600">{t("added_by")}:</span>
                   <span className="ml-2 text-gray-900">{institution.created_by_name}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Дата публикации:</span>
+                  <span className="text-gray-600">{t("publish_date")}:</span>
                   <span className="ml-2 text-gray-900">
                     {formatters.formatDate(institution.created_at)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Последнее обновление:</span>
+                  <span className="text-gray-600">{t("last_update")}:</span>
                   <span className="ml-2 text-gray-900">
                     {formatters.formatDate(institution.updated_at)}
                   </span>
