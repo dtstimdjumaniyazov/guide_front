@@ -23,6 +23,7 @@ import HelpPage from './components/pages/HelpPage'
 import RulesPage from './components/pages/RulesPage'
 import PrivacyPage from './components/pages/PrivacyPage'
 import ContactsPage from './components/pages/ContactsPage'
+import QRSection from './components/QRCode'
 
 function App() {
   return (
@@ -98,13 +99,7 @@ function App() {
               </ProtectedRoute>
             } />
           </Route>
-
-          {/* Маршруты авторизации без Layout
-          <Route path="auth">
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
-          </Route> */}
-
+          <Route path='qr' element={<QRSection />} />
           {/* Страницы ошибок */}
           <Route path="403" element={<ForbiddenPage />} />
           <Route path="*" element={<NotFoundPage />} />
