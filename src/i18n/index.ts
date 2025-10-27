@@ -22,6 +22,10 @@ import ruPrivacyPage from './locales/ru/PrivacyPage.json'
 import uzPrivacyPage from './locales/uz/PrivacyPage.json'
 import ruRulesPage from './locales/ru/RulesPage.json'
 import uzRulesPage from './locales/uz/RulesPage.json'
+import ruQR from './locales/ru/QR.json'
+import uzQR from './locales/uz/QR.json'
+import ruHelpPage from './locales/ru/HelpPage.json'
+import uzHelpPage from './locales/uz/HelpPage.json'
 
 
 i18n
@@ -39,6 +43,8 @@ i18n
         institutionDetail: ruInstitutionDetail,
         privacy: ruPrivacyPage,
         rules: ruRulesPage,
+        QR: ruQR,
+        help: ruHelpPage,
       },
       uz: {
         about: uzAboutPage,
@@ -50,7 +56,9 @@ i18n
         institutionsPage: uzInstitutionsPage,
         institutionDetail: uzInstitutionDetail,
         privacy: uzPrivacyPage,
-        rules: uzRulesPage
+        rules: uzRulesPage,
+        QR: uzQR,
+        help: uzHelpPage,
       },
     },
     lng: "ru", // язык по умолчанию

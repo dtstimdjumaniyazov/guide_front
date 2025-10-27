@@ -2,6 +2,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import QRSection from './QRCode'
 
 const Footer: React.FC = () => {
   const { t } = useTranslation("footer")
@@ -60,7 +61,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Логотип и описание */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
                 <span className="text-white font-bold text-xl">🏫</span>
@@ -102,7 +103,7 @@ const Footer: React.FC = () => {
               ))}
             </ul>
           </div>
-
+          
           {/* Пользовательские ссылки */}
           <div>
             <h3 className="text-white font-semibold mb-4">{t("for_users")}</h3>
@@ -119,7 +120,12 @@ const Footer: React.FC = () => {
               ))}
             </ul>
           </div>
+          {/* QR code */}
+          <div>
+              <QRSection />
+          </div> 
         </div>
+
 
         {/* Нижняя часть */}
         <div className="border-t border-gray-800 mt-8 pt-8">
