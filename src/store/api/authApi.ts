@@ -50,7 +50,13 @@ export interface ConvertTokenResponse {
   user: User,
 }
 
-
+const toUrlEncoded = (obj: Record<string, any>) => {
+  const params = new URLSearchParams();
+  Object.entries(obj).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) params.append(key, String(value));
+  });
+  return params.toString();
+};
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -58,8 +64,11 @@ export const authApi = baseApi.injectEndpoints({
     googleAuth: builder.mutation<ConvertTokenResponse, ConvertTokenRequest>({
       query: (tokenData) => ({
         url: 'auth/convert-token/',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
         method: 'POST',
-        body: tokenData,
+        body: toUrlEncoded(tokenData),
       }),
       invalidatesTags: ['User'],
     }),
