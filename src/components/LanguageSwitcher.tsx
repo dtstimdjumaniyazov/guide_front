@@ -1,12 +1,21 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useDispatch } from "react-redux";
+import { institutionsApi } from '../store/api/institutionsApi'
+
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation();
+  const dispatch = useDispatch();
 
   const changeLanguage = (lng: "ru" | "uz") => {
     i18n.changeLanguage(lng);
     localStorage.setItem("language", lng); // ✅ сохраняем выбор пользователя
+    dispatch(
+      institutionsApi.util.invalidateTags([
+        {type: "InstitutionType", id: "LIST"},
+      ])
+    )
   };
 
   const currentLang = i18n.language;

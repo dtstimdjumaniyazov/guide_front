@@ -192,7 +192,15 @@ export const institutionsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение типов учреждений
     getInstitutionTypes: builder.query<InstitutionType[], void>({
-      query: () => 'institution/types/',
+      query: () => {
+        const lang = localStorage.getItem("language") || 'ru';
+        return {
+          url: 'institution/types/',
+          headers: {
+            "Accept-language": lang,
+          }
+        }
+      },
       providesTags: [{ type: 'InstitutionType', id: 'LIST' }],
     }),
 
