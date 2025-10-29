@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Импортируем JSON-файлы с переводами
 import ruAboutPage from "./locales/ru/AboutPage.json";
@@ -27,9 +28,11 @@ import uzQR from './locales/uz/QR.json'
 import ruHelpPage from './locales/ru/HelpPage.json'
 import uzHelpPage from './locales/uz/HelpPage.json'
 
+const savedLanguage = localStorage.getItem('language') || 'ru'
 
 i18n
   .use(initReactI18next)
+  .use(LanguageDetector)
   .init({
     resources: {
       ru: {
@@ -61,12 +64,22 @@ i18n
         help: uzHelpPage,
       },
     },
-    lng: "ru", // язык по умолчанию
+    lng: savedLanguage, 
     fallbackLng: "ru", // если перевод не найден, будет использоваться русский
-    ns: ["about", "translation", "privacy"],
+    ns: ["about", "translation", "privacy", "footer", "auth", "header", "homePage", "contactsPage", "institutionsPage", "institutionDetail", "rules", "QR", "help"],
+    defaultNS: "translation",
+    detection: {
+      order: ['localStorage', 'navigator'], // Сначала проверяем localStorage
+      caches: ['localStorage'], // Кешируем в localStorage
+      lookupLocalStorage: 'language', // Ключ для чтения из localStorage
+    },
     interpolation: {
       escapeValue: false, // React уже экранирует HTML
     },
+
+    react: {
+      useSuspense: false // ✅ Отключаем suspense для предотвращения мерцания
+    }
   });
 
 export default i18n;
