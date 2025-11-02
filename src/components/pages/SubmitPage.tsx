@@ -34,26 +34,54 @@ const SubmitPage: React.FC = () => {
   const { isAuthenticated, login } = useAuth()
   const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
   
-  const [formData, setFormData] = useState<InstitutionSubmissionData>({
-    name: '',
-    description: '',
-    address: '',
-    contact_phone: '',
-    website: '',
-    social_links: {
-      instagram: '',
-      facebook: '',
-      telegram: '',
-    },
-    age_group: '',
-    price_range: '',
-    services: [],
-    schedule: '',
-    latitude: 0,
-    longitude: 0,
-    institution_type: 0,
-    media_files: [],
+  const [formData, setFormData] = useState<InstitutionSubmissionData>(() => {
+    const savedData = localStorage.getItem('submission_form_draft')
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData)
+        // Добавляем пустой массив media_files, так как их нельзя сохранить
+        return {
+          ...parsed,
+          media_files: [] // медиафайлы не восстанавливаем
+        }
+      } catch (e) {
+        console.error('Failed to parse saved form data:', e)
+      }
+    }
+    return {
+      name: '',
+      description: '',
+      address: '',
+      contact_phone: '',
+      website: '',
+      social_links: {
+        instagram: '',
+        facebook: '',
+        telegram: '',
+      },
+      age_group: '',
+      price_range: '',
+      services: [],
+      schedule: '',
+      latitude: 0,
+      longitude: 0,
+      institution_type: 0,
+      media_files: [],
+    }
   })
+
+  // Сохранение formData в localStorage при каждом изменении (БЕЗ медиафайлов)
+  React.useEffect(() => {
+    // Создаем копию данных без media_files
+    const { media_files, ...dataToSave } = formData
+    localStorage.setItem('submission_form_draft', JSON.stringify(dataToSave))
+  }, [formData])
+
+  // Очистка сохраненных данных после успешной отправки
+  const clearSavedFormData = () => {
+    localStorage.removeItem('submission_form_draft')
+  }
+  
 
   // Новые состояния для модального окна и токена
     const [showPrivacyModal, setShowPrivacyModal] = useState(false)
@@ -333,12 +361,15 @@ const SubmitPage: React.FC = () => {
           // Все равно переходим на страницу учреждений, но с предупреждением
           setTimeout(() => {
             alert('Заявка создана, но некоторые медиафайлы не загрузились. Вы можете добавить их позже.')
+            clearSavedFormData()
             navigate('/institutions')
           }, 2000)
           return
         }
       }
 
+      // Очищаем сохраненные данные формы после успешной отправки
+      clearSavedFormData()
       // Перенаправление после успешной подачи заявки
       navigate('/institutions')
 
@@ -1083,6 +1114,12 @@ const SubmitPage: React.FC = () => {
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Заполните информацию о детском учреждении. После проверки модератором оно будет добавлено в каталог.
+          </p>
+          <p className="text-xs text-green-600 mt-2 flex items-center justify-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Ваши данные автоматически сохраняются (кроме медиафайлов)
           </p>
         </div>
 
