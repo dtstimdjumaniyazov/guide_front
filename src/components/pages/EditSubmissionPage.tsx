@@ -1126,7 +1126,7 @@ const EditSubmissionPage: React.FC = () => {
                       { key: 'instagram', name: 'Instagram', icon: '📸', color: 'pink' },
                       { key: 'facebook', name: 'Facebook', icon: '📘', color: 'blue' },
                       { key: 'telegram', name: 'Telegram', icon: '💬', color: 'sky' }
-                    ].map(({ key, name, icon, color }) => (
+                    ].map(({ key, name, icon }) => (
                       <div key={key} className="flex items-center space-x-3">
                         <span className="text-2xl">{icon}</span>
                         <div className="flex-1 min-w-0">

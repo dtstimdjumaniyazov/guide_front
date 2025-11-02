@@ -69,7 +69,7 @@ function App() {
             } />
             
             <Route path="submit" element={
-              <ProtectedRoute requireAuth>
+              <ProtectedRoute>
                 <SubmitPage />
               </ProtectedRoute>
             } />

@@ -99,6 +99,41 @@ const HomePage: React.FC = () => {
                 {t("home.hero.popular_queries.football")}
               </Link>
             </div>
+
+            {/* Для учреждений - CTA секция */}
+            <div className="mt-12 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl shadow-xl overflow-hidden">
+              <div className="px-6 py-8 sm:px-8 sm:py-10">
+                <Link 
+                      to="/submit" 
+                      
+                >
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-full mb-4 sm:mb-0 sm:float-left sm:mr-4">
+                      <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      Есть свой кружок или центр?
+                    </h3>
+                    <p className="text-gray-800 text-sm sm:text-base">
+                      Добавьте свое учреждение на Детский Гид и находите новых клиентов
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="inline-flex items-center px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl group">
+                      Добавить учреждение
+                      <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
+                    
+                  </div>
+                </div>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -247,7 +282,8 @@ const HomePage: React.FC = () => {
             {t("home.cta.title")}
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            {t("home.cta.description")}
+            {isAuthenticated ?
+            (t("home.cta.description")) : (t("home.cta.descriptionAuth"))}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
           </div>

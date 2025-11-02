@@ -167,7 +167,7 @@ const Footer: React.FC = () => {
               {t("tech_info")}
             </div>
             <div className="mt-2 sm:mt-0">
-              {t("version")}: 1.0.0 | {t("last_update")}: {new Date().toLocaleDateString('ru-RU')}
+              {t("version")}: 1.0.1 Бета | {t("last_update")}: {new Date().toLocaleDateString('ru-RU')}
             </div>
           </div>
         </div>

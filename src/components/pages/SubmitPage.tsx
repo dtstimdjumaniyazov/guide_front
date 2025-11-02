@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateSubmissionMutation, useUploadSubmissionMediaMutation, useGetInstitutionTypesQuery } from '../../store/api/institutionsApi'
+import { useAuth } from '../../providers/AuthProvider'
 import { validators } from '../../hooks/validators'
 import { LoadingSpinner } from '../../components/Loading'
 import type { InstitutionSubmissionData } from '../../types'
@@ -8,6 +9,12 @@ import { MediaUpload } from '../../components/MediaUpload'
 import type { MediaFile } from '../../components/MediaUpload'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import LocationPicker from '../LocationPicker'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import GoogleSignInButton from '../../components/GoogleSignInButton'
+import { useGoogleAuthMutation } from '../../store/api/authApi'
+import PrivacyConsentModal from '../../components/PrivacyConsentModal'
+
+const GOOGLE_AUTH_CLIENT_ID = import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID
 
 interface FormErrors {
   [key: string]: string | undefined
@@ -23,6 +30,9 @@ const SubmitPage: React.FC = () => {
   const [uploadSubmissionMedia] = useUploadSubmissionMediaMutation()
   const { data: institutionTypes, isLoading: typesLoading } = useGetInstitutionTypesQuery()
   useDocumentTitle('Формирование заявки')
+
+  const { isAuthenticated, login } = useAuth()
+  const [googleAuthMutation, { isLoading: googleAuthLoading }] = useGoogleAuthMutation()
   
   const [formData, setFormData] = useState<InstitutionSubmissionData>({
     name: '',
@@ -44,6 +54,61 @@ const SubmitPage: React.FC = () => {
     institution_type: 0,
     media_files: [],
   })
+
+  // Новые состояния для модального окна и токена
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+    const [pendingGoogleToken, setPendingGoogleToken] = useState<any>(null)
+
+  // Первый шаг: проверяем согласие перед входом
+  const handleGoogleSignInAttempt = async (tokenResponse: any) => {
+    // Проверяем, давал ли пользователь согласие ранее
+    const hasConsent = localStorage.getItem('privacy_consent_accepted')
+    
+    if (hasConsent === 'true') {
+      // Если согласие уже есть, входим сразу
+      await processGoogleSignIn(tokenResponse)
+    } else {
+      // Если согласия нет, показываем модальное окно
+      setPendingGoogleToken(tokenResponse)
+      setShowPrivacyModal(true)
+    }
+  }
+
+  // Второй шаг: обработка согласия
+  const handlePrivacyAccept = async () => {
+    // Сохраняем факт согласия
+    localStorage.setItem('privacy_consent_accepted', 'true')
+    localStorage.setItem('privacy_consent_date', new Date().toISOString())
+    
+    setShowPrivacyModal(false)
+    
+    // Продолжаем вход с сохраненным токеном
+    if (pendingGoogleToken) {
+      await processGoogleSignIn(pendingGoogleToken)
+      setPendingGoogleToken(null)
+    }
+  }
+
+  // Третий шаг: фактический вход через Google
+  const processGoogleSignIn = async (tokenResponse: any) => {
+    try {
+      const result = await googleAuthMutation({
+        grant_type: 'convert_token',
+        client_id: import.meta.env.VITE_CLIENT_ID,
+        backend: 'google-oauth2',
+        token: tokenResponse.access_token,
+      }).unwrap()
+
+      login(result.access_token, result.user, result.refresh_token)
+    } catch (error) {
+      console.error('Google sign in failed:', error)
+    }
+  }
+
+  const handlePrivacyModalClose = () => {
+    setShowPrivacyModal(false)
+    setPendingGoogleToken(null)
+  }
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [currentStep, setCurrentStep] = useState(1)
@@ -642,6 +707,34 @@ const SubmitPage: React.FC = () => {
       case 4:
         return (
           <div className="space-y-6">
+            {/* Уведомление о необходимости авторизации для неавторизованных */}
+            {!isAuthenticated && (
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      Почти готово!
+                    </h3>
+                    <p className="text-blue-800 text-sm mb-4">
+                      Чтобы отправить заявку, необходимо войти в систему через Google. Все введенные данные сохранятся.
+                    </p>
+                    
+                    {/* Google Sign-In Button */}
+                    <GoogleOAuthProvider clientId={GOOGLE_AUTH_CLIENT_ID}>
+                      <GoogleSignInButton 
+                        handleGoogleSignIn={handleGoogleSignInAttempt}
+                        isLoading={googleAuthLoading}
+                      />
+                    </GoogleOAuthProvider>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -950,25 +1043,28 @@ const SubmitPage: React.FC = () => {
               </div>
             )}
 
-            {/* Финальное подтверждение */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-semibold text-green-900 mb-2">
-                    Готово к отправке
-                  </h3>
-                  <p className="text-green-800 text-sm">
-                    Проверьте всю информацию выше. После отправки заявка будет рассмотрена модератором. 
-                    Вы получите уведомление о результатах рассмотрения.
-                  </p>
+            {/* Финальное подтверждение - только для авторизованных */}
+            {isAuthenticated && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-green-900 mb-2">
+                      Готово к отправке
+                    </h3>
+                    <p className="text-green-800 text-sm">
+                      Проверьте всю информацию выше. После отправки заявка будет рассмотрена модератором. 
+                      Вы получите уведомление о результатах рассмотрения.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+            
           </div>
         )
 
@@ -1076,7 +1172,7 @@ const SubmitPage: React.FC = () => {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isAuthenticated}
               className="inline-flex items-center px-8 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
             >
               {isSubmitting ? (
@@ -1119,6 +1215,12 @@ const SubmitPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Модальное окно с политикой конфиденциальности */}
+            <PrivacyConsentModal
+              isOpen={showPrivacyModal}
+              onClose={handlePrivacyModalClose}
+              onAccept={handlePrivacyAccept}
+            />
     </div>
   )
 }
