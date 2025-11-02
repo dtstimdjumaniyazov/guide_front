@@ -104,8 +104,7 @@ const HomePage: React.FC = () => {
             <div className="mt-12 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl shadow-xl overflow-hidden">
               <div className="px-6 py-8 sm:px-8 sm:py-10">
                 <Link 
-                      to="/submit" 
-                      
+                      to="/submit"   
                 >
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                   <div className="flex-1 text-center sm:text-left">

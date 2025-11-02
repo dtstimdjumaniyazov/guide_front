@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
-import { email, FORMSPREE_ENDPOINT_GUIDE, phoneNumber } from '../../constants';
+import { email, FORMSPREE_ENDPOINT_GUIDE, phoneNumber, telegramId } from '../../constants';
 import { useAuth } from '../../providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
+import { FaTelegram } from 'react-icons/fa6';
 
 const capitalize = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const FORMSPREE_ENDPOINT = FORMSPREE_ENDPOINT_GUIDE;
@@ -69,6 +70,17 @@ const ContactsPage: React.FC = () => {
               <strong>{t("contacts.phone_label")}:</strong>{' '}
               <a href={`tel:${phoneNumber}`} className="text-blue-600 hover:underline">
                 {phoneNumber}
+              </a>
+            </li>
+            <li>
+              <strong>Telegram:{' '}</strong>
+              <a 
+                href={telegramId} 
+                target='_blank' 
+                rel="noopener noreferrer" 
+                className="text-blue-600 hover:underline"
+              >
+                Написать в Telegram 
               </a>
             </li>
           </ul>
