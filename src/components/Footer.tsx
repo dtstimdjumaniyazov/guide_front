@@ -3,10 +3,13 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import QRSection from './QRCode'
+import { useAuth} from '../providers/AuthProvider'
 
 const Footer: React.FC = () => {
   const { t } = useTranslation("footer")
   
+  const { isAuthenticated } = useAuth()
+
   const footerLinks = {
     main: [
       { label: t("main_links.home"), path: '/' },
@@ -59,7 +62,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Логотип и описание */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
@@ -105,7 +108,8 @@ const Footer: React.FC = () => {
           </div>
           
           {/* Пользовательские ссылки */}
-          {/* <div>
+          {isAuthenticated && (
+            <div>
             <h3 className="text-white font-semibold mb-4">{t("for_users")}</h3>
             <ul className="space-y-2">
               {footerLinks.user.map((link) => (
@@ -119,7 +123,9 @@ const Footer: React.FC = () => {
                 </li>
               ))}
             </ul>
-          </div> */}
+          </div>
+          )}
+          
           {/* QR code */}
           <div>
               <QRSection />
