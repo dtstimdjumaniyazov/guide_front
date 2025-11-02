@@ -4,7 +4,6 @@ import { email, FORMSPREE_ENDPOINT_GUIDE, phoneNumber, telegramId } from '../../
 import { useAuth } from '../../providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
-import { FaTelegram } from 'react-icons/fa6';
 
 const capitalize = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const FORMSPREE_ENDPOINT = FORMSPREE_ENDPOINT_GUIDE;
@@ -106,7 +105,7 @@ const ContactsPage: React.FC = () => {
         {/* если авторизован — показываем форму */}
         {!isLoading && isAuthenticated && (
           <div className="bg-white p-6 rounded-lg shadow mb-[5px]">
-            <p className="text-lg font-semibold mb-4">{t("feedback_form")}</p>
+            <p className="text-lg font-semibold mb-4">{t("contacts.feedback_form")}</p>
 
             <form className="space-y-4" onSubmit={onSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
