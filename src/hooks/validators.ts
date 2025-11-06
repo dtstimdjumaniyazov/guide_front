@@ -51,7 +51,8 @@ export const validators = {
     // Паттерны для различных форматов URL
     const urlPatterns = [
       // С протоколом: https://example.com, http://example.com
-      /^https?:\/\/[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.+[a-zA-Z]{2,}(?:\/.*)?$/i,
+      // Поддерживает: домены с поддоменами, пути, параметры
+      /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?$/i,
       
       // Без протокола: example.com, sub.example.com
       /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.+[a-zA-Z]{2,}(?:\/.*)?$/i,
