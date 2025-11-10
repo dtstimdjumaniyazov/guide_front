@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './providers/AuthProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { HelmetProvider } from 'react-helmet-async'
 
 import ScrollToTop from './components/ScrollToTop'
 import HomePage from './components/pages/HomePage'
@@ -27,6 +28,7 @@ import QRSection from './components/QRCode'
 
 function App() {
   return (
+    <HelmetProvider>
     <AuthProvider>
       <div className="App">
         <ScrollToTop />
@@ -106,6 +108,7 @@ function App() {
         </Routes>
       </div>
     </AuthProvider>
+    </HelmetProvider>
   )
 }
 

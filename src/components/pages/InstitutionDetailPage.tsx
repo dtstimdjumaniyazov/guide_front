@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useGetInstitutionQuery, useAddToFavoritesMutation, useRemoveFromFavoritesMutation } from '../../store/api/institutionsApi'
 import { useAuth } from '../../providers/AuthProvider'
 import { formatters } from '../../hooks/formatters'
+import { SEO } from '../SEO'
 import { LoadingPage } from '../../components/Loading'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { FaYandexInternational } from "react-icons/fa6";
@@ -77,8 +78,37 @@ const InstitutionDetailPage: React.FC = () => {
   const images = institution.media.filter(media => media.media_type === 'photo')
   const videos = institution.media.filter(media => media.media_type === 'video')
 
+  // Создаём Schema.org разметку для детского учреждения
+  const institutionSchema = {
+    "@context": "https://schema.org",
+    "@type": institution.institution_type?.name === "Детский сад" ? "ChildCare" : "EducationalOrganization",
+    "name": institution.name,
+    "description": institution.description,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": institution.address,
+      "addressCountry": "UZ"
+    },
+    "telephone": institution.contact_phone,
+    "url": institution.website || `https://child-guide.co.uz/institutions/${institution.id}`,
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": institution.latitude,
+      "longitude": institution.longitude
+    },
+    "priceRange": institution.price_range,
+    "image": images.length > 0 ? images[0].file : undefined,
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title={`${institution.name} - ${institution.institution_type?.name || 'Учреждение'}`}
+        description={institution.description.length > 155 ? institution.description.substring(0, 152) + '...' : institution.description}
+        canonicalUrl={`https://child-guide.co.uz/institutions/${institution.id}`}
+        ogImage={images.length > 0 ? images[0].file : undefined}
+        schema={institutionSchema}
+      />
       {/* Хлебные крошки */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
