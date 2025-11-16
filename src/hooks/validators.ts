@@ -99,5 +99,49 @@ export const validators = {
 
     // Добавляем https:// если нет протокола
     return `https://${trimmedUrl}`
+  },
+
+  // Метод для автоматического форматирования URL социальных сетей
+  formatSocialUrl: (platform: 'instagram' | 'telegram' | 'facebook', value: string): string => {
+    if (!value || !value.trim()) {
+      return ''
+    }
+
+    const trimmedValue = value.trim()
+
+    // Если уже полный URL, возвращаем как есть
+    if (trimmedValue.match(/^https?:\/\//i)) {
+      return trimmedValue
+    }
+
+    // Проверяем, содержит ли значение домен
+    const hasInstagramDomain = /instagram\.com/i.test(trimmedValue)
+    const hasTelegramDomain = /t\.me/i.test(trimmedValue) || /telegram\.me/i.test(trimmedValue)
+    const hasFacebookDomain = /facebook\.com/i.test(trimmedValue) || /fb\.com/i.test(trimmedValue)
+
+    // Если есть домен, но нет протокола, добавляем протокол
+    if (hasInstagramDomain || hasTelegramDomain || hasFacebookDomain) {
+      return `https://${trimmedValue}`
+    }
+
+    // Если это просто username без домена, добавляем соответствующий префикс
+    switch (platform) {
+      case 'instagram':
+        // Убираем @ если есть в начале
+        const instagramUsername = trimmedValue.replace(/^@/, '')
+        return `https://instagram.com/${instagramUsername}`
+      
+      case 'telegram':
+        // Убираем @ если есть в начале
+        const telegramUsername = trimmedValue.replace(/^@/, '')
+        return `https://t.me/${telegramUsername}`
+      
+      case 'facebook':
+        // Для Facebook обычно нужен полный URL или ID страницы
+        return `https://facebook.com/${trimmedValue}`
+      
+      default:
+        return trimmedValue
+    }
   }
 }

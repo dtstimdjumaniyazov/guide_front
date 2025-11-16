@@ -163,11 +163,12 @@ const SubmitPage: React.FC = () => {
   }
 
   const handleSocialLinkChange = (platform: string, value: string) => {
+    const formattedValue = validators.formatSocialUrl(platform as 'instagram' | 'telegram' | 'facebook', value)
     setFormData(prev => ({
       ...prev,
       social_links: {
         ...prev.social_links,
-        [platform]: value
+        [platform]: formattedValue
       }
     }))
   }
